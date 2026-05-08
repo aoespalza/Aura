@@ -66,7 +66,10 @@ export function DayModal({ date, entry, onSave, onClose }: Props) {
   });
 
   const set = (key: keyof DailyEntry, val: any) => setForm(f => ({ ...f, [key]: val }));
-  const displayDate = new Date(date + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  const todayDate = new Date().toISOString().slice(0, 10);
+  const yesterdayDate = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
+  const dateLabel = date === todayDate ? '🔄 Avance de hoy' : date === yesterdayDate ? '📋 Registrar ayer' : '';
+  const displayDate = `${dateLabel ? dateLabel + ' — ' : ''}${new Date(date + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}`;
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}

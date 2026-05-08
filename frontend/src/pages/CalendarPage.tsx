@@ -9,11 +9,19 @@ function formatMonth(date: Date) {
   return date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
 }
 
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function yesterdayStr() {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 export function CalendarPage() {
   const [current, setCurrent] = useState(new Date());
   const [entries, setEntries] = useState<DailyEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const today = todayStr();
+  const yesterday = yesterdayStr();
 
   const monthKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
 
@@ -28,7 +36,6 @@ export function CalendarPage() {
 
   const firstDay = new Date(current.getFullYear(), current.getMonth(), 1).getDay();
   const daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
-  const today = new Date().toISOString().slice(0, 10);
 
   const days: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
@@ -39,6 +46,9 @@ export function CalendarPage() {
     const date = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(date);
   };
+
+  const yesterdayEntry = entryMap.get(yesterday);
+  const todayEntry = entryMap.get(today);
 
   const handleSave = (entry: DailyEntry) => {
     auraApi.saveEntry(entry).then(() => {
@@ -56,6 +66,24 @@ export function CalendarPage() {
           {formatMonth(current)}
         </h2>
         <button onClick={handleNext} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#ec4899' }}>›</button>
+      </div>
+
+      {/* Accesos rápidos — ayer y hoy */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button onClick={() => setSelectedDate(yesterday)}
+          style={{ flex: 2, background: yesterdayEntry ? `${MOOD_COLOR[yesterdayEntry.mood]}22` : '#fce7f3', border: `2px solid ${yesterdayEntry ? MOOD_COLOR[yesterdayEntry.mood] : '#f9a8d4'}`, borderRadius: 14, padding: '12px 10px', cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>📋 Registrar ayer</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#be185d' }}>
+            {yesterdayEntry ? `${MOOD_EMOJI[yesterdayEntry.mood]} Ya registrado` : '✏️ Pendiente'}
+          </div>
+        </button>
+        <button onClick={() => setSelectedDate(today)}
+          style={{ flex: 1, background: todayEntry ? '#f0fdf4' : '#f9fafb', border: `2px solid ${todayEntry ? '#86efac' : '#e5e7eb'}`, borderRadius: 14, padding: '12px 10px', cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>🔄 Avance hoy</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: todayEntry ? '#15803d' : '#9ca3af' }}>
+            {todayEntry ? '✅ Guardado' : '— Sin datos'}
+          </div>
+        </button>
       </div>
 
       {/* Leyenda */}
@@ -80,6 +108,7 @@ export function CalendarPage() {
             const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const entry = entryMap.get(dateStr);
             const isToday = dateStr === today;
+            const isYesterday = dateStr === yesterday;
             const isFuture = dateStr > today;
 
             return (
@@ -93,15 +122,14 @@ export function CalendarPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: isFuture ? 'default' : 'pointer',
-                  background: entry ? `${MOOD_COLOR[entry.mood]}22` : isToday ? '#fce7f3' : '#f9fafb',
-                  border: isToday ? '2px solid #ec4899' : '1px solid transparent',
+                  background: entry ? `${MOOD_COLOR[entry.mood]}22` : isToday ? '#f9fafb' : isYesterday ? '#fce7f3' : '#f9fafb',
+                  border: isYesterday ? '2px solid #ec4899' : isToday ? '2px dashed #d1d5db' : '1px solid transparent',
                   opacity: isFuture ? 0.35 : 1,
                   position: 'relative',
                   gap: 2,
                   padding: '4px 2px',
-                  transition: 'transform 0.1s',
                 }}>
-                <span style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? '#be185d' : '#374151' }}>{day}</span>
+                <span style={{ fontSize: 11, fontWeight: isYesterday ? 700 : 400, color: isYesterday ? '#be185d' : '#374151' }}>{day}</span>
                 {entry && <span style={{ fontSize: 14 }}>{MOOD_EMOJI[entry.mood]}</span>}
                 {entry && (
                   <div style={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>

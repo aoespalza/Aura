@@ -15,6 +15,7 @@ const ENERGY = [
 const MOOD_COLOR = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#ec4899'];
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
+function yesterdayStr() { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); }
 function formatMonth(date: Date) {
   return date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
 }
@@ -22,12 +23,13 @@ function formatMonth(date: Date) {
 export function HerView() {
   const { logout } = useAuth();
   const today = todayStr();
+  const yesterday = yesterdayStr();
   const [current, setCurrent] = useState(new Date());
   const [entries, setEntries] = useState<DailyEntry[]>([]);
-  const [todayEntry, setTodayEntry] = useState<DailyEntry | null>(null);
+  const [targetDate, setTargetDate] = useState<'yesterday' | 'today'>('yesterday');
   const [view, setView] = useState<'home' | 'calendar'>('home');
 
-  // Form de hoy
+  // Form del día objetivo
   const [herMood, setHerMood] = useState(3);
   const [herEnergy, setHerEnergy] = useState(3);
   const [herNotes, setHerNotes] = useState('');
@@ -35,19 +37,18 @@ export function HerView() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const activeDate = targetDate === 'yesterday' ? yesterday : today;
+
   const monthKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
 
   useEffect(() => {
-    auraApi.getEntry(today).then(e => {
-      if (e) {
-        setTodayEntry(e);
-        setHerMood((e as any).herMood || 3);
-        setHerEnergy((e as any).herEnergyLevel || 3);
-        setHerNotes((e as any).herNotes || '');
-        setIsPeriod(e.isPeriodDay || false);
-      }
+    auraApi.getEntry(activeDate).then(e => {
+      setHerMood((e as any)?.herMood || 3);
+      setHerEnergy((e as any)?.herEnergyLevel || 3);
+      setHerNotes((e as any)?.herNotes || '');
+      setIsPeriod(e?.isPeriodDay || false);
     });
-  }, [today]);
+  }, [activeDate]);
 
   useEffect(() => {
     auraApi.getEntries(monthKey).then(setEntries);
@@ -57,8 +58,8 @@ export function HerView() {
     setSaving(true);
     try {
       await auraApi.saveEntry({
-        date: today,
-        mood: todayEntry?.mood || 3,
+        date: activeDate,
+        mood: 3,
         herMood,
         herEnergyLevel: herEnergy,
         herNotes,
@@ -98,8 +99,20 @@ export function HerView() {
         {/* VISTA INICIO — registro de hoy */}
         {view === 'home' && (
           <div>
+            {/* Selector de día */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              <button onClick={() => setTargetDate('yesterday')}
+                style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: targetDate === 'yesterday' ? '#ec4899' : '#f3f4f6', color: targetDate === 'yesterday' ? 'white' : '#6b7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                📋 Ayer
+              </button>
+              <button onClick={() => setTargetDate('today')}
+                style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: targetDate === 'today' ? '#a855f7' : '#f3f4f6', color: targetDate === 'today' ? 'white' : '#6b7280', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                🔄 Avance hoy
+              </button>
+            </div>
+
             <h2 style={{ fontSize: 18, fontWeight: 800, color: '#be185d', margin: '0 0 20px' }}>
-              ¿Cómo estás hoy?
+              {targetDate === 'yesterday' ? '¿Cómo estuvo ayer?' : '¿Cómo vas hoy?'}
             </h2>
 
             {saved && (
@@ -159,25 +172,29 @@ export function HerView() {
             </button>
 
             {/* Vista del día según él */}
-            {todayEntry && (todayEntry.mood) && (
-              <div style={{ marginTop: 20, background: 'white', borderRadius: 16, padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <p style={{ margin: '0 0 10px', fontSize: 13, color: '#9ca3af', fontWeight: 600 }}>📖 Lo que él registró hoy</p>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <span style={{ fontSize: 32 }}>{['','😤','😕','😐','😊','😍'][todayEntry.mood]}</span>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 13, color: '#374151' }}>
-                      Te vio {['','muy mal 😢','mal','regular','bien 😊','excelente 😍'][todayEntry.mood]}
-                    </p>
-                    {todayEntry.moodNotes && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6b7280', fontStyle: 'italic' }}>"{todayEntry.moodNotes}"</p>}
+            {(() => {
+              const e = entryMap.get(activeDate);
+              if (!e?.mood) return null;
+              return (
+                <div style={{ marginTop: 20, background: 'white', borderRadius: 16, padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: '#9ca3af', fontWeight: 600 }}>📖 Lo que él registró</p>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <span style={{ fontSize: 32 }}>{['','😤','😕','😐','😊','😍'][e.mood]}</span>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 13, color: '#374151' }}>
+                        Te vio {['','muy mal 😢','mal','regular','bien 😊','excelente 😍'][e.mood]}
+                      </p>
+                      {e.moodNotes && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6b7280', fontStyle: 'italic' }}>"{e.moodNotes}"</p>}
+                    </div>
                   </div>
+                  {e.hasDetail && (
+                    <div style={{ marginTop: 8, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, fontSize: 13, color: '#15803d' }}>
+                      🎁 {e.detailDescription || 'Hubo un detalle'}
+                    </div>
+                  )}
                 </div>
-                {todayEntry.hasDetail && (
-                  <div style={{ marginTop: 8, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, fontSize: 13, color: '#15803d' }}>
-                    🎁 {todayEntry.detailDescription || 'Hubo un detalle hoy'}
-                  </div>
-                )}
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
