@@ -14,10 +14,14 @@ function calcPoints(entries: any[]): number {
   let streak = 0;
   let lastDate = '';
 
-  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+  const sorted = [...entries].sort((a, b) => {
+    const da = a.date instanceof Date ? a.date.getTime() : new Date(a.date).getTime();
+    const db = b.date instanceof Date ? b.date.getTime() : new Date(b.date).getTime();
+    return da - db;
+  });
 
   for (const e of sorted) {
-    const dateStr = e.date.slice(0, 10);
+    const dateStr = (e.date instanceof Date ? e.date : new Date(e.date)).toISOString().slice(0, 10);
 
     // Streak consecutivo
     if (lastDate) {
