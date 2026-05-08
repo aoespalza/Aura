@@ -157,51 +157,50 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Notificaciones */}
+      {/* Notificaciones navegador */}
       <div style={{ background: 'white', borderRadius: 16, padding: '20px', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: '#374151' }}>🔔 Recordatorio diario</h3>
+        <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#374151' }}>🔔 Recordatorio del navegador</h3>
 
-        {permStatus === 'denied' && (
-          <div style={{ background: '#fef2f2', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#dc2626' }}>
-            ⚠️ Las notificaciones están bloqueadas. Actívalas en los ajustes del navegador.
+        {!isSecureContext ? (
+          <div style={{ background: '#f9fafb', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#6b7280', border: '1px solid #e5e7eb' }}>
+            🔒 Requiere HTTPS — no disponible en este servidor.<br/>
+            <strong style={{ color: '#374151' }}>Usa Telegram</strong> (sección de abajo) para notificaciones confiables.
           </div>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#374151' }}>Activar recordatorio</p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9ca3af' }}>
-              {permStatus === 'granted' ? '✅ Permisos concedidos' : permStatus === 'denied' ? '❌ Permisos denegados' : '⏳ Sin configurar'}
-            </p>
-          </div>
-          <label style={{ position: 'relative', width: 48, height: 26, cursor: 'pointer' }}>
-            <input type="checkbox" checked={settings.enabled} onChange={e => toggleNotif(e.target.checked)}
-              style={{ opacity: 0, width: 0, height: 0 }} />
-            <span style={{
-              position: 'absolute', inset: 0, borderRadius: 13,
-              background: settings.enabled ? '#ec4899' : '#d1d5db',
-              transition: 'background 0.2s',
-            }}>
-              <span style={{
-                position: 'absolute', top: 3, left: settings.enabled ? 26 : 3,
-                width: 20, height: 20, borderRadius: '50%', background: 'white',
-                transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              }} />
-            </span>
-          </label>
-        </div>
-
-        {settings.enabled && permStatus === 'granted' && (
+        ) : (
           <>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Hora del recordatorio</label>
-              <input type="time" value={settings.time} onChange={e => changeTime(e.target.value)}
-                style={{ padding: '8px 12px', border: '2px solid #fce7f3', borderRadius: 10, fontSize: 15, outline: 'none', color: '#be185d', fontWeight: 700 }} />
+            {permStatus === 'denied' && (
+              <div style={{ background: '#fef2f2', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#dc2626' }}>
+                ⚠️ Las notificaciones están bloqueadas. Actívalas en los ajustes del navegador.
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#374151' }}>Activar recordatorio</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9ca3af' }}>
+                  {permStatus === 'granted' ? '✅ Permisos concedidos' : permStatus === 'denied' ? '❌ Permisos denegados' : '⏳ Sin configurar'}
+                </p>
+              </div>
+              <label style={{ position: 'relative', width: 48, height: 26, cursor: 'pointer' }}>
+                <input type="checkbox" checked={settings.enabled} onChange={e => toggleNotif(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }} />
+                <span style={{ position: 'absolute', inset: 0, borderRadius: 13, background: settings.enabled ? '#ec4899' : '#d1d5db', transition: 'background 0.2s' }}>
+                  <span style={{ position: 'absolute', top: 3, left: settings.enabled ? 26 : 3, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                </span>
+              </label>
             </div>
-            <button onClick={sendTest}
-              style={{ background: '#fce7f3', color: '#be185d', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              {testSent ? '✅ Enviada!' : '📤 Enviar notificación de prueba'}
-            </button>
+            {settings.enabled && permStatus === 'granted' && (
+              <>
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Hora del recordatorio</label>
+                  <input type="time" value={settings.time} onChange={e => changeTime(e.target.value)}
+                    style={{ padding: '8px 12px', border: '2px solid #fce7f3', borderRadius: 10, fontSize: 15, outline: 'none', color: '#be185d', fontWeight: 700 }} />
+                </div>
+                <button onClick={sendTest}
+                  style={{ background: '#fce7f3', color: '#be185d', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  {testSent ? '✅ Enviada!' : '📤 Enviar notificación de prueba'}
+                </button>
+              </>
+            )}
           </>
         )}
       </div>
