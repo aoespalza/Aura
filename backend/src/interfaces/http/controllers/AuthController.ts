@@ -1,18 +1,32 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../../../infrastructure/database/prisma';
 
-// PIN de él (admin) y de ella — persisten en memoria durante el proceso
-let hisPinHash = bcrypt.hashSync('1234', 10);
-let herPinHash = bcrypt.hashSync('5678', 10);
+async function getPinHash(key: 'pin_him' | 'pin_her'): Promise<string> {
+  const cfg = await prisma.systemConfig.findFirst({ where: { key } });
+  if (cfg) return cfg.value;
+  const hash = await bcrypt.hash(key === 'pin_him' ? '1234' : '5678', 10);
+  await prisma.systemConfig.upsert({
+    where: { key }, update: { value: hash }, create: { key, value: hash }
+  });
+  return hash;
+}
+
+async function setPinHash(key: 'pin_him' | 'pin_her', hash: string) {
+  await prisma.systemConfig.upsert({
+    where: { key }, update: { value: hash }, create: { key, value: hash }
+  });
+}
 
 export class AuthController {
   async login(req: Request, res: Response) {
     const { pin } = req.body;
     if (!pin) { res.status(400).json({ error: 'PIN requerido' }); return; }
 
-    const isHis = await bcrypt.compare(String(pin), hisPinHash);
-    const isHer = !isHis && await bcrypt.compare(String(pin), herPinHash);
+    const [hisHash, herHash] = await Promise.all([getPinHash('pin_him'), getPinHash('pin_her')]);
+    const isHis = await bcrypt.compare(String(pin), hisHash);
+    const isHer = !isHis && await bcrypt.compare(String(pin), herHash);
 
     if (!isHis && !isHer) { res.status(401).json({ error: 'PIN incorrecto' }); return; }
 
@@ -26,19 +40,16 @@ export class AuthController {
   }
 
   async changePin(req: Request, res: Response) {
-    const { currentPin, newPin, target } = req.body; // target: 'him' | 'her'
+    const { currentPin, newPin, target } = req.body;
     const role = (req as any).userRole;
-
-    // Solo él puede cambiar PINs
     if (role !== 'him') { res.status(403).json({ error: 'Solo el administrador puede cambiar PINs' }); return; }
 
-    const isHis = await bcrypt.compare(String(currentPin), hisPinHash);
+    const hisHash = await getPinHash('pin_him');
+    const isHis = await bcrypt.compare(String(currentPin), hisHash);
     if (!isHis) { res.status(401).json({ error: 'PIN actual incorrecto' }); return; }
 
     const newHash = await bcrypt.hash(String(newPin), 10);
-    if (target === 'her') herPinHash = newHash;
-    else hisPinHash = newHash;
-
+    await setPinHash(target === 'her' ? 'pin_her' : 'pin_him', newHash);
     res.json({ success: true });
   }
 }
