@@ -5,7 +5,7 @@ import { PeriodController } from '../controllers/PeriodController';
 import { SpecialDateController } from '../controllers/SpecialDateController';
 import { PointsController } from '../controllers/PointsController';
 import { SuggestionsController } from '../controllers/SuggestionsController';
-import { WhatsappController } from '../controllers/WhatsappController';
+import { TelegramController } from '../controllers/TelegramController';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
@@ -15,7 +15,7 @@ const period = new PeriodController();
 const specialDate = new SpecialDateController();
 const points = new PointsController();
 const suggestions = new SuggestionsController();
-const whatsapp = new WhatsappController();
+const telegram = new TelegramController();
 
 // Auth
 router.post('/auth/login', (req, res) => auth.login(req, res));
@@ -41,10 +41,10 @@ router.get('/points', authenticate, (req, res) => points.get(req, res));
 // Sugerencias
 router.get('/suggestions', authenticate, (req, res) => suggestions.get(req, res));
 
-// WhatsApp (CallMeBot)
-router.get('/whatsapp/config', authenticate, (req, res) => whatsapp.getConfig(req, res));
-router.post('/whatsapp/config', authenticate, (req, res) => whatsapp.saveConfig(req, res));
-router.post('/whatsapp/test', authenticate, (req, res) => whatsapp.sendTest(req, res));
+// Telegram
+router.get('/telegram/config', authenticate, (req, res) => telegram.getConfig(req, res));
+router.post('/telegram/config', authenticate, (req, res) => telegram.saveConfig(req, res));
+router.post('/telegram/test', authenticate, (req, res) => telegram.sendTest(req, res));
 
 // Ciclos menstruales
 router.get('/period/next', authenticate, (req, res) => period.nextPrediction(req, res));

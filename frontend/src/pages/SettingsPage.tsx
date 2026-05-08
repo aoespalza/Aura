@@ -103,37 +103,37 @@ export function SettingsPage() {
     }
   };
 
-  // WhatsApp config
-  const [wa, setWa] = useState({ phone: '', apiKey: '', enabled: false });
-  const [waMsg, setWaMsg] = useState<{ type: 'ok'|'err'; text: string } | null>(null);
-  const [waTesting, setWaTesting] = useState(false);
+  // Telegram config
+  const [tg, setTg] = useState({ token: '', chatId: '', enabled: false });
+  const [tgMsg, setTgMsg] = useState<{ type: 'ok'|'err'; text: string } | null>(null);
+  const [tgTesting, setTgTesting] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('aura_token') || '';
-    fetch('/api/whatsapp/config', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => setWa(d)).catch(() => {});
+    const authToken = localStorage.getItem('aura_token') || '';
+    fetch('/api/telegram/config', { headers: { Authorization: `Bearer ${authToken}` } })
+      .then(r => r.json()).then(d => setTg(d)).catch(() => {});
   }, []);
 
-  const saveWa = async () => {
-    const token = localStorage.getItem('aura_token') || '';
-    const r = await fetch('/api/whatsapp/config', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(wa),
+  const saveTg = async () => {
+    const authToken = localStorage.getItem('aura_token') || '';
+    const r = await fetch('/api/telegram/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify(tg),
     });
-    if (r.ok) setWaMsg({ type: 'ok', text: 'Configuración guardada' });
-    else setWaMsg({ type: 'err', text: 'Error al guardar' });
-    setTimeout(() => setWaMsg(null), 3000);
+    if (r.ok) setTgMsg({ type: 'ok', text: 'Configuración guardada' });
+    else setTgMsg({ type: 'err', text: 'Error al guardar' });
+    setTimeout(() => setTgMsg(null), 3000);
   };
 
-  const testWa = async () => {
-    setWaTesting(true);
-    const token = localStorage.getItem('aura_token') || '';
+  const testTg = async () => {
+    setTgTesting(true);
+    const authToken = localStorage.getItem('aura_token') || '';
     try {
-      const r = await fetch('/api/whatsapp/test', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch('/api/telegram/test', { method: 'POST', headers: { Authorization: `Bearer ${authToken}` } });
       const d = await r.json();
-      setWaMsg(d.success ? { type: 'ok', text: '✅ Mensaje enviado' } : { type: 'err', text: d.error || 'Error' });
-    } catch { setWaMsg({ type: 'err', text: 'Error de conexión' }); }
-    finally { setWaTesting(false); setTimeout(() => setWaMsg(null), 4000); }
+      setTgMsg(d.success ? { type: 'ok', text: '✅ Mensaje enviado' } : { type: 'err', text: d.error || 'Error' });
+    } catch { setTgMsg({ type: 'err', text: 'Error de conexión' }); }
+    finally { setTgTesting(false); setTimeout(() => setTgMsg(null), 4000); }
   };
 
   // Verificar si hoy está registrado y mostrar badge
@@ -206,47 +206,49 @@ export function SettingsPage() {
         )}
       </div>
 
-      {/* WhatsApp */}
+      {/* Telegram */}
       <div style={{ background: 'white', borderRadius: 16, padding: '20px', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: '#374151' }}>
-          <span style={{ fontSize: 20 }}>💬</span> Notificaciones por WhatsApp
+          ✈️ Notificaciones por Telegram
         </h3>
         <p style={{ margin: '0 0 16px', fontSize: 12, color: '#9ca3af' }}>
-          Vía CallMeBot (gratis). Guarda el +34 644 59 21 27 y envíale: <em>"I allow callmebot to send me messages"</em>
+          1. Bot ya creado: <strong>@AndresyAurabot</strong><br/>
+          2. Abre el bot en Telegram y presiona <em>Start</em><br/>
+          3. Busca <strong>@userinfobot</strong> → envíale cualquier mensaje → copia tu <em>Id</em>
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div>
-            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>Tu número (con código de país)</label>
-            <input value={wa.phone} onChange={e => setWa(w => ({ ...w, phone: e.target.value }))}
-              placeholder="+573001234567"
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid #fce7f3', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>Token del bot</label>
+            <input type="password" value={tg.token} onChange={e => setTg(t => ({ ...t, token: e.target.value }))}
+              placeholder="8768703377:AAE..."
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid #e0f2fe', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>API Key de CallMeBot</label>
-            <input type="password" value={wa.apiKey} onChange={e => setWa(w => ({ ...w, apiKey: e.target.value }))}
-              placeholder="Ej: 123456"
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid #fce7f3', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>Tu Chat ID (de @userinfobot)</label>
+            <input value={tg.chatId} onChange={e => setTg(t => ({ ...t, chatId: e.target.value }))}
+              placeholder="Ej: 123456789"
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid #e0f2fe', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
             <span style={{ fontSize: 14, fontWeight: 600 }}>Activar resumen diario (8am)</span>
-            <input type="checkbox" checked={wa.enabled} onChange={e => setWa(w => ({ ...w, enabled: e.target.checked }))}
-              style={{ width: 20, height: 20, accentColor: '#25d366' }} />
+            <input type="checkbox" checked={tg.enabled} onChange={e => setTg(t => ({ ...t, enabled: e.target.checked }))}
+              style={{ width: 20, height: 20, accentColor: '#0088cc' }} />
           </label>
 
-          {waMsg && (
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: waMsg.type === 'ok' ? '#16a34a' : '#dc2626' }}>{waMsg.text}</p>
+          {tgMsg && (
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: tgMsg.type === 'ok' ? '#16a34a' : '#dc2626' }}>{tgMsg.text}</p>
           )}
 
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={saveWa}
-              style={{ flex: 1, background: '#25d366', color: 'white', border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={saveTg}
+              style={{ flex: 1, background: '#0088cc', color: 'white', border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               💾 Guardar
             </button>
-            <button onClick={testWa} disabled={waTesting || !wa.phone || !wa.apiKey}
-              style={{ flex: 1, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: !wa.phone || !wa.apiKey ? 0.5 : 1 }}>
-              {waTesting ? 'Enviando...' : '📤 Probar'}
+            <button onClick={testTg} disabled={tgTesting || !tg.chatId}
+              style={{ flex: 1, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: !tg.chatId ? 0.5 : 1 }}>
+              {tgTesting ? 'Enviando...' : '📤 Probar'}
             </button>
           </div>
         </div>
