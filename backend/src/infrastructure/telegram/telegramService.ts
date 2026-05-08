@@ -1,6 +1,6 @@
 import { prisma } from '../database/prisma';
 
-interface TgConfig { token: string; chatId: string; enabled: boolean; }
+interface TgConfig { token: string; chatId: string; chatIdHer: string; enabled: boolean; }
 
 export async function getTgConfig(): Promise<TgConfig | null> {
   try {
@@ -10,22 +10,26 @@ export async function getTgConfig(): Promise<TgConfig | null> {
   return null;
 }
 
-export async function sendTelegram(text: string): Promise<{ success: boolean; error?: string }> {
-  const config = await getTgConfig();
-  if (!config?.enabled || !config.token || !config.chatId) {
-    return { success: false, error: 'Telegram no configurado' };
-  }
+async function sendToChat(token: string, chatId: string, text: string): Promise<boolean> {
   try {
-    const url = `https://api.telegram.org/bot${config.token}/sendMessage`;
-    const res = await fetch(url, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: config.chatId, text, parse_mode: 'Markdown' }),
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
     });
     const data = await res.json() as any;
-    if (data.ok) return { success: true };
-    return { success: false, error: data.description || 'Error Telegram API' };
-  } catch (e: any) {
-    return { success: false, error: e.message };
+    return data.ok === true;
+  } catch { return false; }
+}
+
+export async function sendTelegram(text: string, onlyHer = false): Promise<{ success: boolean; error?: string }> {
+  const config = await getTgConfig();
+  if (!config?.enabled || !config.token) {
+    return { success: false, error: 'Telegram no configurado' };
   }
+  const results: boolean[] = [];
+  if (!onlyHer && config.chatId)    results.push(await sendToChat(config.token, config.chatId, text));
+  if (config.chatIdHer)             results.push(await sendToChat(config.token, config.chatIdHer, text));
+  if (results.length === 0) return { success: false, error: 'Sin Chat IDs configurados' };
+  return results.some(r => r) ? { success: true } : { success: false, error: 'No se pudo enviar a ningún destinatario' };
 }

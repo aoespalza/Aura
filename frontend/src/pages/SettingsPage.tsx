@@ -104,7 +104,7 @@ export function SettingsPage() {
   };
 
   // Telegram config
-  const [tg, setTg] = useState({ token: '', chatId: '', enabled: false });
+  const [tg, setTg] = useState({ token: '', chatId: '', chatIdHer: '', enabled: false });
   const [tgMsg, setTgMsg] = useState<{ type: 'ok'|'err'; text: string } | null>(null);
   const [tgTesting, setTgTesting] = useState(false);
 
@@ -225,10 +225,19 @@ export function SettingsPage() {
               style={{ width: '100%', padding: '10px 12px', border: '1px solid #e0f2fe', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>Tu Chat ID (de @userinfobot)</label>
+            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>👨 Tu Chat ID (de @userinfobot)</label>
             <input value={tg.chatId} onChange={e => setTg(t => ({ ...t, chatId: e.target.value }))}
               placeholder="Ej: 123456789"
               style={{ width: '100%', padding: '10px 12px', border: '1px solid #e0f2fe', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>👩 Chat ID de ella (de @userinfobot)</label>
+            <input value={tg.chatIdHer} onChange={e => setTg(t => ({ ...t, chatIdHer: e.target.value }))}
+              placeholder="Ej: 987654321"
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid #fce7f3', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
+              Ella debe abrir @AndresyAurabot → Start, luego buscar su ID en @userinfobot
+            </p>
           </div>
 
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
