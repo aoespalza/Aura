@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aura_db
+    environment:
+      POSTGRES_USER: aura_user
+      POSTGRES_PASSWORD: aura123
+      POSTGRES_DB: aura_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - aura_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aura_user -d aura_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: aura_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://aura_user:aura123@aura_db:5432/aura_db?schema=public"
+      JWT_SECRET: "aura-super-secret-2026"
+      JWT_EXPIRES_IN: "30d"
+      PORT: "3007"
+      NODE_ENV: "production"
+    ports:
+      - "3007:3007"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: aura_frontend
+    depends_on:
+      - backend
+    ports:
+      - "5176:80"
+    restart: unless-stopped
+
+volumes:
+  aura_postgres_data:

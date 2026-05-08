@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DailyEntry {
+  id               String   @id @default(uuid())
+  date             DateTime @unique
+
+  // Estado de ánimo (1=muy mal, 2=mal, 3=regular, 4=bien, 5=excelente)
+  mood             Int
+  moodNotes        String?
+
+  // Intimidad
+  hasIntimacy      Boolean  @default(false)
+
+  // Disgusto
+  hasDisgust       Boolean  @default(false)
+  disgustReason    String?
+  disgustIntensity Int?     // 1-5
+  disgustResolved  Boolean  @default(false)
+
+  // Período
+  isPeriodDay      Boolean  @default(false)
+  periodDayNumber  Int?
+  periodSymptoms   String?
+
+  // Detalles / gestos
+  hasDetail        Boolean  @default(false)
+  detailFrom       String?  // 'me' | 'her' | 'both'
+  detailDescription String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model PeriodCycle {
+  id        String    @id @default(uuid())
+  startDate DateTime
+  endDate   DateTime?
+  duration  Int?
+  notes     String?
+  createdAt DateTime  @default(now())
+}
