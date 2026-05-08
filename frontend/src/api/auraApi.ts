@@ -54,6 +54,36 @@ export interface Stats {
   moodByWeekday: Record<string, number>;
 }
 
+export interface SpecialDate {
+  id: string;
+  name: string;
+  month: number;
+  day: number;
+  type: string;
+  notes?: string;
+  reminderDays: number;
+  daysUntil?: number;
+  nextDate?: string;
+}
+
+export interface Points {
+  totalPoints: number;
+  periodPoints: number;
+  level: { min: number; label: string; color: string };
+  nextLevel?: { min: number; label: string; color: string };
+  progressToNext: number;
+  breakdown: { days: number; intimacyBonus: number; detailBonus: number; moodBonus: number; resolvedBonus: number };
+  monthly: { month: string; points: number }[];
+}
+
+export interface Suggestion {
+  type: string;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  action?: string;
+}
+
 export const auraApi = {
   login: async (pin: string) => {
     const { data } = await api.post('/auth/login', { pin });
@@ -105,6 +135,37 @@ export const auraApi = {
 
   getNextPeriodPrediction: async () => {
     const { data } = await api.get('/period/next');
+    return data;
+  },
+
+  // Fechas especiales
+  getSpecialDates: async (): Promise<SpecialDate[]> => {
+    const { data } = await api.get('/special-dates');
+    return data;
+  },
+  getUpcomingSpecialDates: async (days = 30): Promise<SpecialDate[]> => {
+    const { data } = await api.get(`/special-dates/upcoming?days=${days}`);
+    return data;
+  },
+  createSpecialDate: async (d: Omit<SpecialDate, 'id'>): Promise<SpecialDate> => {
+    const { data } = await api.post('/special-dates', d);
+    return data;
+  },
+  updateSpecialDate: async (id: string, d: Partial<SpecialDate>): Promise<SpecialDate> => {
+    const { data } = await api.put(`/special-dates/${id}`, d);
+    return data;
+  },
+  deleteSpecialDate: async (id: string) => { await api.delete(`/special-dates/${id}`); },
+
+  // Matripuntos
+  getPoints: async (months = 3): Promise<Points> => {
+    const { data } = await api.get(`/points?months=${months}`);
+    return data;
+  },
+
+  // Sugerencias
+  getSuggestions: async (): Promise<Suggestion[]> => {
+    const { data } = await api.get('/suggestions');
     return data;
   },
 };

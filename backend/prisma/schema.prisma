@@ -50,6 +50,17 @@ model DailyEntry {
   updatedAt        DateTime @updatedAt
 }
 
+model SpecialDate {
+  id           String   @id @default(uuid())
+  name         String
+  month        Int      // 1-12
+  day          Int      // 1-31
+  type         String   // birthday | anniversary | other
+  notes        String?
+  reminderDays Int      @default(3)
+  createdAt    DateTime @default(now())
+}
+
 model PeriodCycle {
   id        String    @id @default(uuid())
   startDate DateTime

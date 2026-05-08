@@ -7,9 +7,11 @@ import { DisgutsPage } from './pages/DisgutsPage';
 import { CyclePage } from './pages/CyclePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { HerView } from './pages/HerView';
+import { SpecialDatesPage } from './pages/SpecialDatesPage';
+import { MatripuntosPage } from './pages/MatripuntosPage';
 import './App.css';
 
-type Tab = 'calendar' | 'disgusts' | 'cycle' | 'stats' | 'settings';
+type Tab = 'calendar' | 'disgusts' | 'cycle' | 'points' | 'more' | 'settings';
 
 function AppContent() {
   const { isAuth, role, logout } = useAuth();
@@ -31,13 +33,14 @@ function AppContent() {
         {tab === 'calendar' && <CalendarPage />}
         {tab === 'disgusts' && <DisgutsPage />}
         {tab === 'cycle' && <CyclePage />}
-        {tab === 'stats' && <StatsPage />}
+        {tab === 'points' && <MatripuntosPage />}
+        {tab === 'more' && <SpecialDatesPage />}
         {tab === 'settings' && <SettingsPage />}
       </div>
 
       {/* Bottom nav */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #fce7f3', display: 'flex', justifyContent: 'center', gap: 0 }}>
-        {([['calendar','📅','Hoy'],['disgusts','😤','Disgustos'],['cycle','💜','Ciclo'],['stats','📊','Resumen'],['settings','⚙️','Ajustes']] as [Tab,string,string][]).map(([t, icon, label]) => (
+        {([['calendar','📅','Hoy'],['disgusts','😤','Disgustos'],['cycle','💜','Ciclo'],['points','💎','Puntos'],['more','✨','Fechas'],['settings','⚙️','Ajustes']] as [Tab,string,string][]).map(([t, icon, label]) => (
           <button key={t} onClick={() => setTab(t)}
             style={{ flex: 1, background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: tab === t ? '#ec4899' : '#9ca3af' }}>
             <span style={{ fontSize: 22 }}>{icon}</span>
