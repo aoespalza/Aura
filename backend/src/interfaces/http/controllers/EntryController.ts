@@ -34,8 +34,8 @@ export class EntryController {
   // POST /entries  — crea o actualiza (upsert por fecha)
   async upsert(req: Request, res: Response) {
     try {
-      const { date, ...data } = req.body;
-      const parsedDate = new Date(date + 'T00:00:00');
+      const { date, id, createdAt, updatedAt, ...data } = req.body;
+      const parsedDate = new Date(date.slice(0, 10) + 'T00:00:00');
       const entry = await prisma.dailyEntry.upsert({
         where: { date: parsedDate },
         update: data,
