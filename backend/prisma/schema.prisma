@@ -50,6 +50,12 @@ model DailyEntry {
   updatedAt        DateTime @updatedAt
 }
 
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model SpecialDate {
   id           String   @id @default(uuid())
   name         String

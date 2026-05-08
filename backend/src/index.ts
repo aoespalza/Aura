@@ -1,8 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import cron from 'node-cron';
 import { connectDatabase } from './infrastructure/database/prisma';
 import routes from './interfaces/http/routes';
+import { sendDailyWhatsapp } from './infrastructure/whatsapp/dailyWhatsapp';
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -27,6 +29,13 @@ process.on('unhandledRejection', (reason) => console.error('[unhandledRejection]
 
 async function start() {
   await connectDatabase();
+
+  // Resumen diario por WhatsApp a las 8:00 AM
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Aura] Enviando resumen diario WhatsApp...');
+    sendDailyWhatsapp();
+  });
+
   app.listen(PORT, () => console.log(`🌸 Aura backend en puerto ${PORT}`));
 }
 
