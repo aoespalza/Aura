@@ -14,8 +14,10 @@ export interface DailyEntry {
   mood: number;
   moodNotes?: string;
   hasIntimacy?: boolean;
+  intimacyQuality?: number;
   hasDisgust?: boolean;
   disgustReason?: string;
+  disgustCategory?: string;
   disgustIntensity?: number;
   disgustResolved?: boolean;
   isPeriodDay?: boolean;
@@ -23,7 +25,9 @@ export interface DailyEntry {
   periodSymptoms?: string;
   hasDetail?: boolean;
   detailFrom?: string;
+  detailType?: string;
   detailDescription?: string;
+  energyLevel?: number;
 }
 
 export interface PeriodCycle {

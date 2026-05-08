@@ -17,12 +17,14 @@ model DailyEntry {
 
   // Intimidad
   hasIntimacy      Boolean  @default(false)
+  intimacyQuality  Int?     // 1-5
 
   // Disgusto
-  hasDisgust       Boolean  @default(false)
-  disgustReason    String?
-  disgustIntensity Int?     // 1-5
-  disgustResolved  Boolean  @default(false)
+  hasDisgust         Boolean  @default(false)
+  disgustReason      String?
+  disgustCategory    String?  // comunicacion | actitud | economico | domestico | celos | otro
+  disgustIntensity   Int?     // 1-5
+  disgustResolved    Boolean  @default(false)
 
   // Período
   isPeriodDay      Boolean  @default(false)
@@ -30,9 +32,13 @@ model DailyEntry {
   periodSymptoms   String?
 
   // Detalles / gestos
-  hasDetail        Boolean  @default(false)
-  detailFrom       String?  // 'me' | 'her' | 'both'
+  hasDetail         Boolean  @default(false)
+  detailFrom        String?  // 'me' | 'her' | 'both'
+  detailType        String?  // regalo | salida | palabras | ayuda | sorpresa | otro
   detailDescription String?
+
+  // Energía
+  energyLevel      Int?     // 1-5
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
