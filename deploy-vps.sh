@@ -38,7 +38,7 @@ if [ -d "$APP_DIR/.git" ]; then
   git fetch origin
   git reset --hard origin/master
 else
-  git clone https://github.com/aoespalza/aura.git "$APP_DIR"
+  git clone https://github.com/aoespalza/Aura.git "$APP_DIR"
   cd "$APP_DIR"
 fi
 info "Código: $(git log --oneline -1)"
