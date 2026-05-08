@@ -61,8 +61,8 @@ info "Generando Prisma Client..."
 export DATABASE_URL="postgresql://$DB_USER:$DB_PASS@localhost:5432/$DB_NAME?schema=public"
 npx prisma generate
 
-info "Ejecutando migraciones..."
-npx prisma migrate deploy 2>&1 || warn "Migraciones: verifica manualmente"
+info "Sincronizando schema DB..."
+npx prisma db push --accept-data-loss 2>&1 || warn "db push falló, verifica manualmente"
 
 info "Compilando backend..."
 npm run build
