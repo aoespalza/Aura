@@ -6,15 +6,17 @@ import { StatsPage } from './pages/StatsPage';
 import { DisgutsPage } from './pages/DisgutsPage';
 import { CyclePage } from './pages/CyclePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { HerView } from './pages/HerView';
 import './App.css';
 
 type Tab = 'calendar' | 'disgusts' | 'cycle' | 'stats' | 'settings';
 
 function AppContent() {
-  const { isAuth, logout } = useAuth();
+  const { isAuth, role, logout } = useAuth();
   const [tab, setTab] = useState<Tab>('calendar');
 
   if (!isAuth) return <LoginPage />;
+  if (role === 'her') return <HerView />;
 
   return (
     <div style={{ minHeight: '100vh', background: '#fdf2f8', fontFamily: 'system-ui, sans-serif', paddingBottom: 80 }}>

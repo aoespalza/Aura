@@ -1,0 +1,5 @@
+ALTER TABLE "DailyEntry"
+  ADD COLUMN IF NOT EXISTS "herMood"        INTEGER,
+  ADD COLUMN IF NOT EXISTS "herMoodNotes"   TEXT,
+  ADD COLUMN IF NOT EXISTS "herEnergyLevel" INTEGER,
+  ADD COLUMN IF NOT EXISTS "herNotes"       TEXT;

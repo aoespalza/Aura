@@ -28,6 +28,11 @@ export interface DailyEntry {
   detailType?: string;
   detailDescription?: string;
   energyLevel?: number;
+  herMood?: number;
+  herMoodNotes?: string;
+  herEnergyLevel?: number;
+  herNotes?: string;
+  [key: string]: any;
 }
 
 export interface PeriodCycle {

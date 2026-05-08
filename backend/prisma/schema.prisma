@@ -40,6 +40,12 @@ model DailyEntry {
   // Energía
   energyLevel      Int?     // 1-5
 
+  // Perspectiva de ella
+  herMood          Int?     // 1-5
+  herMoodNotes     String?
+  herEnergyLevel   Int?     // 1-5
+  herNotes         String?  // notas libres de ella
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
