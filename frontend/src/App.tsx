@@ -3,9 +3,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { StatsPage } from './pages/StatsPage';
+import { DisgutsPage } from './pages/DisgutsPage';
+import { CyclePage } from './pages/CyclePage';
+import { SettingsPage } from './pages/SettingsPage';
 import './App.css';
 
-type Tab = 'calendar' | 'stats';
+type Tab = 'calendar' | 'disgusts' | 'cycle' | 'stats' | 'settings';
 
 function AppContent() {
   const { isAuth, logout } = useAuth();
@@ -24,14 +27,17 @@ function AppContent() {
       {/* Contenido */}
       <div style={{ paddingTop: 16 }}>
         {tab === 'calendar' && <CalendarPage />}
+        {tab === 'disgusts' && <DisgutsPage />}
+        {tab === 'cycle' && <CyclePage />}
         {tab === 'stats' && <StatsPage />}
+        {tab === 'settings' && <SettingsPage />}
       </div>
 
       {/* Bottom nav */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #fce7f3', display: 'flex', justifyContent: 'center', gap: 0 }}>
-        {([['calendar','📅','Calendario'],['stats','📊','Estadísticas']] as [Tab,string,string][]).map(([t, icon, label]) => (
+        {([['calendar','📅','Hoy'],['disgusts','😤','Disgustos'],['cycle','💜','Ciclo'],['stats','📊','Resumen'],['settings','⚙️','Ajustes']] as [Tab,string,string][]).map(([t, icon, label]) => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, maxWidth: 120, background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: tab === t ? '#ec4899' : '#9ca3af' }}>
+            style={{ flex: 1, background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: tab === t ? '#ec4899' : '#9ca3af' }}>
             <span style={{ fontSize: 22 }}>{icon}</span>
             <span style={{ fontSize: 10, fontWeight: tab === t ? 700 : 400 }}>{label}</span>
           </button>
