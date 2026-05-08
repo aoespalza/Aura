@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
   <rect width="100" height="100" rx="22" fill="#ec4899"/>
-  <text x="50" y="68" font-size="58" text-anchor="middle">🌸</text>
+  <ellipse cx="50" cy="28" rx="18" ry="11" fill="#fce7f3" opacity="0.95"/>
+  <ellipse cx="50" cy="72" rx="18" ry="11" fill="#fce7f3" opacity="0.95"/>
+  <ellipse cx="72" cy="39" rx="18" ry="11" transform="rotate(72 72 39)" fill="#fce7f3" opacity="0.95"/>
+  <ellipse cx="64" cy="65" rx="18" ry="11" transform="rotate(144 64 65)" fill="#fce7f3" opacity="0.95"/>
+  <ellipse cx="36" cy="65" rx="18" ry="11" transform="rotate(216 36 65)" fill="#fce7f3" opacity="0.95"/>
+  <ellipse cx="28" cy="39" rx="18" ry="11" transform="rotate(288 28 39)" fill="#fce7f3" opacity="0.95"/>
+  <circle cx="50" cy="50" r="13" fill="#fbbf24"/>
+  <circle cx="50" cy="50" r="7" fill="#f59e0b"/>
 </svg>
