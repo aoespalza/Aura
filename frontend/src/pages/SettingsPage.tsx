@@ -29,6 +29,7 @@ export function SettingsPage() {
   const { logout } = useAuth();
   const [settings, setSettings] = useState<NotifSettings>(loadSettings);
   const [permStatus, setPermStatus] = useState<NotificationPermission>('default');
+  const [pinTarget, setPinTarget] = useState<'him' | 'her'>('him');
   const [pinForm, setPinForm] = useState({ current: '', next: '', confirm: '' });
   const [pinMsg, setPinMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [testSent, setTestSent] = useState(false);
@@ -94,7 +95,7 @@ export function SettingsPage() {
       await fetch('/api/auth/pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ currentPin: pinForm.current, newPin: pinForm.next }),
+        body: JSON.stringify({ currentPin: pinForm.current, newPin: pinForm.next, target: pinTarget }),
       }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); });
       setPinMsg({ type: 'ok', text: 'PIN cambiado correctamente' });
       setPinForm({ current: '', next: '', confirm: '' });
@@ -264,7 +265,15 @@ export function SettingsPage() {
 
       {/* Cambiar PIN */}
       <div style={{ background: 'white', borderRadius: 16, padding: '20px', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: '#374151' }}>🔒 Cambiar PIN</h3>
+        <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#374151' }}>🔒 Cambiar PIN</h3>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          {([['him','👨 Mi PIN'],['her','👩 PIN de ella']] as ['him'|'her',string][]).map(([v,l]) => (
+            <button key={v} type="button" onClick={() => { setPinTarget(v); setPinForm({ current:'', next:'', confirm:'' }); setPinMsg(null); }}
+              style={{ flex:1, padding:'8px', borderRadius:10, border:'none', background: pinTarget===v ? '#ec4899' : '#f3f4f6', color: pinTarget===v ? 'white' : '#6b7280', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+              {l}
+            </button>
+          ))}
+        </div>
         <form onSubmit={handleChangePin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[['current','PIN actual'],['next','Nuevo PIN'],['confirm','Confirmar PIN']].map(([k, label]) => (
             <div key={k}>
