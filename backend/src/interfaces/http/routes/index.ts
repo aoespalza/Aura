@@ -6,6 +6,7 @@ import { SpecialDateController } from '../controllers/SpecialDateController';
 import { PointsController } from '../controllers/PointsController';
 import { SuggestionsController } from '../controllers/SuggestionsController';
 import { TelegramController } from '../controllers/TelegramController';
+import { ConfigController } from '../controllers/ConfigController';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
@@ -16,6 +17,7 @@ const specialDate = new SpecialDateController();
 const points = new PointsController();
 const suggestions = new SuggestionsController();
 const telegram = new TelegramController();
+const config = new ConfigController();
 
 // Auth
 router.post('/auth/login', (req, res) => auth.login(req, res));
@@ -37,6 +39,10 @@ router.delete('/special-dates/:id', authenticate, (req, res) => specialDate.remo
 
 // Matripuntos
 router.get('/points', authenticate, (req, res) => points.get(req, res));
+
+// Configuración (perfil: edad, edad máx, min/encuentro)
+router.get('/config', authenticate, (req, res) => config.get(req, res));
+router.post('/config', authenticate, (req, res) => config.set(req, res));
 
 // Sugerencias
 router.get('/suggestions', authenticate, (req, res) => suggestions.get(req, res));

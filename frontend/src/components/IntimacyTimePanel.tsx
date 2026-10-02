@@ -1,4 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { auraApi } from '../api/auraApi';
+
+// Mapa clave-en-BD -> clave-en-localStorage
+const DB_KEYS = {
+  age: 'profile_age',
+  maxAge: 'profile_max_age',
+  perEncounter: 'intimacy_min_per_encounter',
+} as const;
 
 // Un estudio citado: la pareja promedio acumula ~22 días "en tiempo" (continuos)
 // de intimidad en toda su vida. 22 días × 24 h × 60 min = 31 680 minutos.
@@ -31,9 +39,22 @@ export function IntimacyTimePanel({ intimacyDays, months }: { intimacyDays: numb
   const [maxAge, setMaxAge] = useState(() => load('aura_maxage', 80));
   const [perEncounter, setPerEncounter] = useState(() => load('aura_minenc', 5));
 
-  const save = (key: string, v: number, setter: (n: number) => void) => {
+  // Al montar: traer los valores guardados en la base de datos y sobreescribir el caché local
+  useEffect(() => {
+    auraApi.getConfig()
+      .then(cfg => {
+        if (cfg[DB_KEYS.age] != null) setAge(Number(cfg[DB_KEYS.age]));
+        if (cfg[DB_KEYS.maxAge] != null) setMaxAge(Number(cfg[DB_KEYS.maxAge]));
+        if (cfg[DB_KEYS.perEncounter] != null) setPerEncounter(Number(cfg[DB_KEYS.perEncounter]));
+      })
+      .catch(() => { /* si falla, se usan los del caché/local */ });
+  }, []);
+
+  // Guarda en estado, en localStorage (caché) y en la base de datos (persistente)
+  const save = (lsKey: string, dbKey: string, v: number, setter: (n: number) => void) => {
     setter(v);
-    try { localStorage.setItem(key, String(v)); } catch { /* noop */ }
+    try { localStorage.setItem(lsKey, String(v)); } catch { /* noop */ }
+    auraApi.setConfig(dbKey, v).catch(() => { /* sin bloquear la UI */ });
   };
 
   // Acumulado en el rango consultado
@@ -69,17 +90,17 @@ export function IntimacyTimePanel({ intimacyDays, months }: { intimacyDays: numb
         <div>
           <label style={labelStyle}>Tu edad</label>
           <input type="number" min={10} max={120} value={age}
-            onChange={e => save('aura_age', parseInt(e.target.value) || 0, setAge)} style={inputStyle} />
+            onChange={e => save('aura_age', DB_KEYS.age, parseInt(e.target.value) || 0, setAge)} style={inputStyle} />
         </div>
         <div>
           <label style={labelStyle}>Edad activa máx.</label>
           <input type="number" min={age} max={120} value={maxAge}
-            onChange={e => save('aura_maxage', parseInt(e.target.value) || 0, setMaxAge)} style={inputStyle} />
+            onChange={e => save('aura_maxage', DB_KEYS.maxAge, parseInt(e.target.value) || 0, setMaxAge)} style={inputStyle} />
         </div>
         <div>
           <label style={labelStyle}>Min/encuentro</label>
           <select value={perEncounter}
-            onChange={e => save('aura_minenc', parseInt(e.target.value), setPerEncounter)}
+            onChange={e => save('aura_minenc', DB_KEYS.perEncounter, parseInt(e.target.value), setPerEncounter)}
             style={{ ...inputStyle, width: 64 }}>
             <option value={4}>4</option>
             <option value={5}>5</option>

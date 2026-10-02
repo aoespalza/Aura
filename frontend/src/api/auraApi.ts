@@ -174,4 +174,13 @@ export const auraApi = {
     const { data } = await api.get('/suggestions');
     return data;
   },
+
+  // Configuración de perfil
+  getConfig: async (): Promise<Record<string, string>> => {
+    const { data } = await api.get('/config');
+    return data;
+  },
+  setConfig: async (key: string, value: string | number): Promise<void> => {
+    await api.post('/config', { key, value: String(value) });
+  },
 };
