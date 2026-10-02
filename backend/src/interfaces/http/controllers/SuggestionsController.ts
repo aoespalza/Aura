@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../../../infrastructure/database/prisma';
+import { AuthRequest } from '../middleware/auth';
 
 const DETAIL_SUGGESTIONS: Record<string, string[]> = {
   regalo:   ['Un libro de su autor favorito', 'Flores sorpresa', 'Su postre favorito', 'Un accesorio que mencionó'],
@@ -10,17 +11,18 @@ const DETAIL_SUGGESTIONS: Record<string, string[]> = {
 };
 
 export class SuggestionsController {
-  async get(req: Request, res: Response) {
+  async get(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const thirtyAgo = new Date(today); thirtyAgo.setDate(thirtyAgo.getDate() - 30);
       const sevenAgo = new Date(today); sevenAgo.setDate(sevenAgo.getDate() - 7);
 
       const [recentEntries, allEntries, cycles, specialDates] = await Promise.all([
-        prisma.dailyEntry.findMany({ where: { date: { gte: sevenAgo } }, orderBy: { date: 'desc' } }),
-        prisma.dailyEntry.findMany({ where: { date: { gte: thirtyAgo } }, orderBy: { date: 'desc' } }),
-        prisma.periodCycle.findMany({ orderBy: { startDate: 'desc' }, take: 3 }),
-        prisma.specialDate.findMany(),
+        prisma.dailyEntry.findMany({ where: { coupleId, date: { gte: sevenAgo } }, orderBy: { date: 'desc' } }),
+        prisma.dailyEntry.findMany({ where: { coupleId, date: { gte: thirtyAgo } }, orderBy: { date: 'desc' } }),
+        prisma.periodCycle.findMany({ where: { coupleId }, orderBy: { startDate: 'desc' }, take: 3 }),
+        prisma.specialDate.findMany({ where: { coupleId } }),
       ]);
 
       const suggestions: { type: string; priority: 'high' | 'medium' | 'low'; title: string; description: string; action?: string }[] = [];

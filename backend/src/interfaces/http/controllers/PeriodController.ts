@@ -1,24 +1,27 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../../../infrastructure/database/prisma';
+import { AuthRequest } from '../middleware/auth';
 
 export class PeriodController {
-  async list(req: Request, res: Response) {
+  async list(req: AuthRequest, res: Response) {
     try {
-      const cycles = await prisma.periodCycle.findMany({ orderBy: { startDate: 'desc' } });
+      const coupleId = req.coupleId!;
+      const cycles = await prisma.periodCycle.findMany({ where: { coupleId }, orderBy: { startDate: 'desc' } });
       res.json(cycles);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   }
 
-  async create(req: Request, res: Response) {
+  async create(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const { startDate, endDate, notes } = req.body;
       const start = new Date(startDate + 'T00:00:00');
       const end = endDate ? new Date(endDate + 'T00:00:00') : null;
       const duration = end ? Math.ceil((end.getTime() - start.getTime()) / 86400000) : null;
       const cycle = await prisma.periodCycle.create({
-        data: { startDate: start, endDate: end, duration, notes },
+        data: { coupleId, startDate: start, endDate: end, duration, notes },
       });
       res.json(cycle);
     } catch (e: any) {
@@ -26,14 +29,16 @@ export class PeriodController {
     }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const { endDate, notes } = req.body;
       const end = endDate ? new Date(endDate + 'T00:00:00') : null;
-      const existing = await prisma.periodCycle.findUnique({ where: { id: req.params.id } });
-      const duration = end && existing ? Math.ceil((end.getTime() - existing.startDate.getTime()) / 86400000) : null;
+      const existing = await prisma.periodCycle.findFirst({ where: { id: req.params.id, coupleId } });
+      if (!existing) { res.status(404).json({ error: 'Ciclo no encontrado' }); return; }
+      const duration = end ? Math.ceil((end.getTime() - existing.startDate.getTime()) / 86400000) : null;
       const cycle = await prisma.periodCycle.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: { endDate: end, duration, notes },
       });
       res.json(cycle);
@@ -42,9 +47,10 @@ export class PeriodController {
     }
   }
 
-  async remove(req: Request, res: Response) {
+  async remove(req: AuthRequest, res: Response) {
     try {
-      await prisma.periodCycle.delete({ where: { id: req.params.id } });
+      const coupleId = req.coupleId!;
+      await prisma.periodCycle.deleteMany({ where: { id: req.params.id, coupleId } });
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -52,10 +58,11 @@ export class PeriodController {
   }
 
   // Calcular próxima fecha estimada basada en promedio de ciclos
-  async nextPrediction(req: Request, res: Response) {
+  async nextPrediction(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const cycles = await prisma.periodCycle.findMany({
-        where: { endDate: { not: null } },
+        where: { coupleId, endDate: { not: null } },
         orderBy: { startDate: 'desc' },
         take: 6,
       });

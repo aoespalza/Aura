@@ -1,10 +1,12 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../../../infrastructure/database/prisma';
+import { AuthRequest } from '../middleware/auth';
 
 export class SpecialDateController {
-  async list(req: Request, res: Response) {
+  async list(req: AuthRequest, res: Response) {
     try {
-      const dates = await prisma.specialDate.findMany({ orderBy: [{ month: 'asc' }, { day: 'asc' }] });
+      const coupleId = req.coupleId!;
+      const dates = await prisma.specialDate.findMany({ where: { coupleId }, orderBy: [{ month: 'asc' }, { day: 'asc' }] });
       // Calcular días hasta la próxima ocurrencia
       const today = new Date();
       const withNext = dates.map(d => {
@@ -18,39 +20,45 @@ export class SpecialDateController {
     } catch (e: any) { res.status(500).json({ error: e.message }); }
   }
 
-  async create(req: Request, res: Response) {
+  async create(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const { name, month, day, type, notes, reminderDays } = req.body;
       const d = await prisma.specialDate.create({
-        data: { name, month: parseInt(month), day: parseInt(day), type, notes, reminderDays: reminderDays ?? 3 }
+        data: { coupleId, name, month: parseInt(month), day: parseInt(day), type, notes, reminderDays: reminderDays ?? 3 }
       });
       res.json(d);
     } catch (e: any) { res.status(500).json({ error: e.message }); }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
+      const existing = await prisma.specialDate.findFirst({ where: { id: req.params.id, coupleId } });
+      if (!existing) { res.status(404).json({ error: 'Fecha no encontrada' }); return; }
       const { name, month, day, type, notes, reminderDays } = req.body;
       const d = await prisma.specialDate.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: { name, month: parseInt(month), day: parseInt(day), type, notes, reminderDays: reminderDays ?? 3 }
       });
       res.json(d);
     } catch (e: any) { res.status(500).json({ error: e.message }); }
   }
 
-  async remove(req: Request, res: Response) {
+  async remove(req: AuthRequest, res: Response) {
     try {
-      await prisma.specialDate.delete({ where: { id: req.params.id } });
+      const coupleId = req.coupleId!;
+      await prisma.specialDate.deleteMany({ where: { id: req.params.id, coupleId } });
       res.json({ success: true });
     } catch (e: any) { res.status(500).json({ error: e.message }); }
   }
 
   // Fechas próximas en los siguientes N días (para notificaciones)
-  async upcoming(req: Request, res: Response) {
+  async upcoming(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const days = parseInt(String(req.query.days || '30'));
-      const dates = await prisma.specialDate.findMany();
+      const dates = await prisma.specialDate.findMany({ where: { coupleId } });
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const upcoming = dates.filter(d => {
         const thisYear = new Date(today.getFullYear(), d.month - 1, d.day);

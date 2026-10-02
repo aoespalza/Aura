@@ -1,17 +1,19 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../../../infrastructure/database/prisma';
+import { AuthRequest } from '../middleware/auth';
 
 export class EntryController {
   // GET /entries?month=2026-05
-  async list(req: Request, res: Response) {
+  async list(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const { month } = req.query;
-      let where = {};
+      let where: any = { coupleId };
       if (month) {
         const [year, m] = String(month).split('-').map(Number);
         const start = new Date(year, m - 1, 1);
         const end = new Date(year, m, 0, 23, 59, 59);
-        where = { date: { gte: start, lte: end } };
+        where = { coupleId, date: { gte: start, lte: end } };
       }
       const entries = await prisma.dailyEntry.findMany({ where, orderBy: { date: 'asc' } });
       res.json(entries);
@@ -21,25 +23,27 @@ export class EntryController {
   }
 
   // GET /entries/:date  (formato YYYY-MM-DD)
-  async getByDate(req: Request, res: Response) {
+  async getByDate(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const date = new Date(req.params.date + 'T00:00:00');
-      const entry = await prisma.dailyEntry.findFirst({ where: { date } });
+      const entry = await prisma.dailyEntry.findFirst({ where: { coupleId, date } });
       res.json(entry || null);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   }
 
-  // POST /entries  — crea o actualiza (upsert por fecha)
-  async upsert(req: Request, res: Response) {
+  // POST /entries  — crea o actualiza (upsert por fecha dentro de la pareja)
+  async upsert(req: AuthRequest, res: Response) {
     try {
-      const { date, id, createdAt, updatedAt, ...data } = req.body;
+      const coupleId = req.coupleId!;
+      const { date, id, createdAt, updatedAt, coupleId: _ignore, ...data } = req.body;
       const parsedDate = new Date(date.slice(0, 10) + 'T00:00:00');
       const entry = await prisma.dailyEntry.upsert({
-        where: { date: parsedDate },
+        where: { coupleId_date: { coupleId, date: parsedDate } },
         update: data,
-        create: { date: parsedDate, mood: data.mood ?? 3, ...data },
+        create: { coupleId, date: parsedDate, mood: data.mood ?? 3, ...data },
       });
       res.json(entry);
     } catch (e: any) {
@@ -48,10 +52,11 @@ export class EntryController {
   }
 
   // DELETE /entries/:date
-  async remove(req: Request, res: Response) {
+  async remove(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const date = new Date(req.params.date + 'T00:00:00');
-      await prisma.dailyEntry.deleteMany({ where: { date } });
+      await prisma.dailyEntry.deleteMany({ where: { coupleId, date } });
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -59,14 +64,15 @@ export class EntryController {
   }
 
   // GET /entries/stats?months=3
-  async stats(req: Request, res: Response) {
+  async stats(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const months = parseInt(String(req.query.months || '3'));
       const since = new Date();
       since.setMonth(since.getMonth() - months);
 
       const entries = await prisma.dailyEntry.findMany({
-        where: { date: { gte: since } },
+        where: { coupleId, date: { gte: since } },
         orderBy: { date: 'asc' },
       });
 

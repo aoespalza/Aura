@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../../../infrastructure/database/prisma';
+import { AuthRequest } from '../middleware/auth';
 
 const LEVELS = [
   { min: 0,    label: '🌱 Semilla',       color: '#86efac' },
@@ -45,17 +46,18 @@ function calcPoints(entries: any[]): number {
 }
 
 export class PointsController {
-  async get(req: Request, res: Response) {
+  async get(req: AuthRequest, res: Response) {
     try {
+      const coupleId = req.coupleId!;
       const months = parseInt(String(req.query.months || '3'));
       const since = new Date(); since.setMonth(since.getMonth() - months);
 
       const entries = await prisma.dailyEntry.findMany({
-        where: { date: { gte: since } },
+        where: { coupleId, date: { gte: since } },
         orderBy: { date: 'asc' }
       });
 
-      const allEntries = await prisma.dailyEntry.findMany({ orderBy: { date: 'asc' } });
+      const allEntries = await prisma.dailyEntry.findMany({ where: { coupleId }, orderBy: { date: 'asc' } });
 
       const totalPoints = calcPoints(allEntries);
       const periodPoints = calcPoints(entries);

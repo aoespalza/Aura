@@ -7,9 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────────────────────────
+// Multi-tenant: cada pareja (Couple) agrupa a sus usuarios y datos
+// ─────────────────────────────────────────────────────────────
+
+model Couple {
+  id           String         @id @default(uuid())
+  name         String?
+  createdAt    DateTime       @default(now())
+
+  users        User[]
+  entries      DailyEntry[]
+  cycles       PeriodCycle[]
+  specialDates SpecialDate[]
+  config       CoupleConfig[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("partner") // 'owner' | 'partner'
+  age          Int?
+
+  coupleId     String?
+  couple       Couple?  @relation(fields: [coupleId], references: [id])
+
+  createdAt    DateTime @default(now())
+}
+
+// Invitaciones para enlazar dos usuarios como pareja
+model CoupleInvite {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toEmail    String
+  status     String   @default("pending") // pending | accepted | rejected
+  createdAt  DateTime @default(now())
+
+  @@index([toEmail])
+}
+
+// Configuración por pareja (edad máx., min/encuentro, etc.)
+model CoupleConfig {
+  id        String   @id @default(uuid())
+  coupleId  String
+  couple    Couple   @relation(fields: [coupleId], references: [id])
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([coupleId, key])
+}
+
 model DailyEntry {
   id               String   @id @default(uuid())
-  date             DateTime @unique
+  date             DateTime
+
+  coupleId         String?
+  couple           Couple?  @relation(fields: [coupleId], references: [id])
 
   // Estado de ánimo (1=muy mal, 2=mal, 3=regular, 4=bien, 5=excelente)
   mood             Int
@@ -48,6 +104,8 @@ model DailyEntry {
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@unique([coupleId, date])
 }
 
 model SystemConfig {
@@ -58,6 +116,10 @@ model SystemConfig {
 
 model SpecialDate {
   id           String   @id @default(uuid())
+
+  coupleId     String?
+  couple       Couple?  @relation(fields: [coupleId], references: [id])
+
   name         String
   month        Int      // 1-12
   day          Int      // 1-31
@@ -69,6 +131,10 @@ model SpecialDate {
 
 model PeriodCycle {
   id        String    @id @default(uuid())
+
+  coupleId  String?
+  couple    Couple?   @relation(fields: [coupleId], references: [id])
+
   startDate DateTime
   endDate   DateTime?
   duration  Int?
