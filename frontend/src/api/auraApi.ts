@@ -50,6 +50,12 @@ export interface Stats {
   disgustDays: number;
   periodDays: number;
   detailDays: number;
+  avgIntimacyQuality: number;
+  avgDisgustIntensity: number;
+  disgustResolvedRate: number;
+  intimacyPerMonth: number;
+  disgustPerMonth: number;
+  detailPerMonth: number;
   periodDisgustRate: number;
   moodByWeekday: Record<string, number>;
 }

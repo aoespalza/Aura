@@ -48,6 +48,34 @@ export function StatsPage() {
         ))}
       </div>
 
+      {/* Promedios */}
+      <div style={{ background: 'white', borderRadius: 14, padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginBottom: 16 }}>
+        <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: 14, color: '#374151' }}>📈 Promedios</p>
+
+        {[
+          { label: 'Intimidad — calidad', icon: '❤️', color: '#ec4899', avg: stats.avgIntimacyQuality, freq: stats.intimacyPerMonth },
+          { label: 'Discusiones — intensidad', icon: '😤', color: '#f97316', avg: stats.avgDisgustIntensity, freq: stats.disgustPerMonth, extra: `${stats.disgustResolvedRate}% resueltas` },
+        ].map(row => (
+          <div key={row.label} style={{ marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+              <span style={{ fontSize: 13, color: '#4b5563' }}>{row.icon} {row.label}</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: row.color }}>{row.avg > 0 ? `${row.avg}/5` : '—'}</span>
+            </div>
+            <div style={{ background: '#f3f4f6', borderRadius: 8, height: 8, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(row.avg / 5) * 100}%`, background: row.color, borderRadius: 8, transition: 'width 0.3s' }} />
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
+              {row.freq}/mes{row.extra ? ` · ${row.extra}` : ''}
+            </p>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
+          <span style={{ fontSize: 13, color: '#4b5563' }}>🎁 Detalles — frecuencia</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#22c55e' }}>{stats.detailPerMonth}/mes</span>
+        </div>
+      </div>
+
       {/* Correlación período-disgusto */}
       {stats.periodDays > 0 && (
         <div style={{ background: '#fdf4ff', borderRadius: 14, padding: '16px', marginBottom: 16 }}>

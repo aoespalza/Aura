@@ -70,12 +70,32 @@ export class EntryController {
         orderBy: { date: 'asc' },
       });
 
+      const round1 = (n: number) => Math.round(n * 10) / 10;
+      const avgOf = (arr: (number | null | undefined)[]) => {
+        const vals = arr.filter((v): v is number => typeof v === 'number');
+        return vals.length ? round1(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+      };
+
       const total = entries.length;
       const avgMood = total ? entries.reduce((s, e) => s + e.mood, 0) / total : 0;
       const intimacyDays = entries.filter(e => e.hasIntimacy).length;
       const disgustDays = entries.filter(e => e.hasDisgust).length;
       const periodDays = entries.filter(e => e.isPeriodDay).length;
       const detailDays = entries.filter(e => e.hasDetail).length;
+
+      // Promedios de calidad / intensidad (escala 1-5)
+      const avgIntimacyQuality = avgOf(entries.filter(e => e.hasIntimacy).map(e => e.intimacyQuality));
+      const avgDisgustIntensity = avgOf(entries.filter(e => e.hasDisgust).map(e => e.disgustIntensity));
+
+      // % de disgustos resueltos
+      const disgustResolvedDays = entries.filter(e => e.hasDisgust && e.disgustResolved).length;
+      const disgustResolvedRate = disgustDays > 0 ? Math.round((disgustResolvedDays / disgustDays) * 100) : 0;
+
+      // Frecuencia promedio por mes (sobre el rango consultado)
+      const perMonth = (n: number) => (months > 0 ? round1(n / months) : 0);
+      const intimacyPerMonth = perMonth(intimacyDays);
+      const disgustPerMonth = perMonth(disgustDays);
+      const detailPerMonth = perMonth(detailDays);
 
       // Correlación período-disgusto: días de período que también tienen disgusto
       const periodWithDisgust = entries.filter(e => e.isPeriodDay && e.hasDisgust).length;
@@ -97,6 +117,12 @@ export class EntryController {
         disgustDays,
         periodDays,
         detailDays,
+        avgIntimacyQuality,
+        avgDisgustIntensity,
+        disgustResolvedRate,
+        intimacyPerMonth,
+        disgustPerMonth,
+        detailPerMonth,
         periodDisgustRate,
         moodByWeekday: Object.fromEntries(
           Object.entries(moodByWeekday).map(([k, v]) => [k, Math.round((v.total / v.count) * 10) / 10])
