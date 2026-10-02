@@ -8,12 +8,17 @@ export function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [months, setMonths] = useState(3);
   const [prediction, setPrediction] = useState<{ prediction: string | null; avgCycleDays?: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    auraApi.getStats(months).then(setStats);
-    auraApi.getNextPeriodPrediction().then(setPrediction);
+    setError(null);
+    auraApi.getStats(months)
+      .then(setStats)
+      .catch(e => setError(e?.response?.data?.error || e?.message || 'Error al cargar estadísticas'));
+    auraApi.getNextPeriodPrediction().then(setPrediction).catch(() => {});
   }, [months]);
 
+  if (error) return <div style={{ textAlign: 'center', padding: 40, color: '#ef4444', fontSize: 13 }}>⚠️ {error}</div>;
   if (!stats) return <div style={{ textAlign: 'center', padding: 40, color: '#ec4899' }}>Cargando...</div>;
 
   const moodColor = MOOD_COLOR[Math.round(stats.avgMood)] || '#9ca3af';

@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+// override:true hace que el .env mande sobre variables heredadas del entorno
+// (p.ej. PORT=3010 de Cronovista), evitando que el backend intente el puerto equivocado.
+dotenv.config({ override: true });
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';

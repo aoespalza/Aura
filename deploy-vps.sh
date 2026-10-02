@@ -126,7 +126,8 @@ NODE_ENV=production
 EOF
 
 pm2 delete aura-backend 2>/dev/null || true
-pm2 start dist/index.js --name aura-backend
+# PORT=3007 explícito + --update-env para no heredar un PORT equivocado del shell (p.ej. 3010 de Cronovista)
+PORT=3007 pm2 start dist/index.js --name aura-backend --update-env
 
 pm2 save
 pm2 startup systemd -u root --hp /root 2>/dev/null | grep "sudo" | bash 2>/dev/null || true
