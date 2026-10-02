@@ -55,8 +55,10 @@ fi
 # ── 5. Backend ────────────────────────────────────────────────
 info "Instalando dependencias del backend..."
 cd "$BACKEND_DIR"
-# --include=dev fuerza las devDependencies (tsc) aunque NODE_ENV=production
-npm install --include=dev --prefer-offline 2>/dev/null || npm install --include=dev
+# NODE_ENV=development + --include=dev fuerza las devDependencies (tsc, @types/*)
+# aunque el VPS tenga NODE_ENV=production en el entorno.
+NODE_ENV=development npm install --include=dev --prefer-offline 2>/dev/null \
+  || NODE_ENV=development npm install --include=dev
 
 info "Generando Prisma Client..."
 export DATABASE_URL="postgresql://$DB_USER:$DB_PASS@localhost:5432/$DB_NAME?schema=public"
@@ -71,8 +73,10 @@ npm run build
 # ── 6. Frontend ───────────────────────────────────────────────
 info "Instalando dependencias del frontend..."
 cd "$FRONTEND_DIR"
-# --include=dev fuerza las devDependencies (vite, tsc) aunque NODE_ENV=production
-npm install --include=dev --prefer-offline 2>/dev/null || npm install --include=dev
+# NODE_ENV=development + --include=dev fuerza las devDependencies (vite, tsc)
+# aunque el VPS tenga NODE_ENV=production en el entorno.
+NODE_ENV=development npm install --include=dev --prefer-offline 2>/dev/null \
+  || NODE_ENV=development npm install --include=dev
 
 info "Compilando frontend..."
 VITE_API_URL="" npm run build
