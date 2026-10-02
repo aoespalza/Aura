@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auraApi, type Stats } from '../api/auraApi';
+import { IntimacyTimePanel } from '../components/IntimacyTimePanel';
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MOOD_COLOR = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#ec4899'];
@@ -80,6 +81,9 @@ export function StatsPage() {
           <span style={{ fontSize: 15, fontWeight: 800, color: '#22c55e' }}>{stats.detailPerMonth}/mes</span>
         </div>
       </div>
+
+      {/* Panel de tiempo de intimidad */}
+      <IntimacyTimePanel intimacyDays={stats.intimacyDays} months={months} />
 
       {/* Correlación período-disgusto */}
       {stats.periodDays > 0 && (
