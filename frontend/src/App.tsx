@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
+import { LinkPartnerPage } from './pages/LinkPartnerPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { StatsPage } from './pages/StatsPage';
 import { DisgutsPage } from './pages/DisgutsPage';
 import { CyclePage } from './pages/CyclePage';
 import { SettingsPage } from './pages/SettingsPage';
-import { HerView } from './pages/HerView';
 import { SpecialDatesPage } from './pages/SpecialDatesPage';
 import { MatripuntosPage } from './pages/MatripuntosPage';
 import './App.css';
@@ -14,11 +14,12 @@ import './App.css';
 type Tab = 'calendar' | 'disgusts' | 'cycle' | 'points' | 'stats' | 'more' | 'settings';
 
 function AppContent() {
-  const { isAuth, role, logout } = useAuth();
+  const { isAuth, loading, hasCouple, logout } = useAuth();
   const [tab, setTab] = useState<Tab>('calendar');
 
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fdf2f8', color: '#ec4899', fontFamily: 'system-ui' }}>Cargando...</div>;
   if (!isAuth) return <LoginPage />;
-  if (role === 'her') return <HerView />;
+  if (!hasCouple) return <LinkPartnerPage />;
 
   return (
     <div style={{ minHeight: '100vh', background: '#fdf2f8', fontFamily: 'system-ui, sans-serif', paddingBottom: 72, width: '100%', overflowX: 'hidden' }}>

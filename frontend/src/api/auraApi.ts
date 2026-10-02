@@ -90,9 +90,60 @@ export interface Suggestion {
   action?: string;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  coupleId: string | null;
+  age: number | null;
+}
+export interface AuthResult { token: string; user: AuthUser; }
+export interface CoupleMember { id: string; name: string | null; email: string; role: string; }
+export interface CoupleInfo { id: string; name: string | null; members: CoupleMember[]; }
+export interface MeResult { user: AuthUser; couple: CoupleInfo | null; }
+export interface Invite {
+  id: string;
+  fromUserId: string;
+  toEmail: string;
+  status: string;
+  createdAt: string;
+  from: { id: string; name: string | null; email: string } | null;
+}
+
 export const auraApi = {
-  login: async (pin: string) => {
-    const { data } = await api.post('/auth/login', { pin });
+  login: async (email: string, password: string): Promise<AuthResult> => {
+    const { data } = await api.post('/auth/login', { email, password });
+    return data;
+  },
+  register: async (email: string, password: string, name?: string): Promise<AuthResult> => {
+    const { data } = await api.post('/auth/register', { email, password, name });
+    return data;
+  },
+  me: async (): Promise<MeResult> => {
+    const { data } = await api.get('/auth/me');
+    return data;
+  },
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const { data } = await api.post('/auth/password', { currentPassword, newPassword });
+    return data;
+  },
+
+  // Enlace de pareja
+  inviteCouple: async (toEmail: string) => {
+    const { data } = await api.post('/couple/invite', { toEmail });
+    return data;
+  },
+  getInvites: async (): Promise<Invite[]> => {
+    const { data } = await api.get('/couple/invites');
+    return data;
+  },
+  acceptInvite: async (id: string) => {
+    const { data } = await api.post(`/couple/invites/${id}/accept`);
+    return data;
+  },
+  rejectInvite: async (id: string) => {
+    const { data } = await api.post(`/couple/invites/${id}/reject`);
     return data;
   },
 

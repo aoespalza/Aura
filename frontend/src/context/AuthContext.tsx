@@ -1,40 +1,76 @@
-import { createContext, useContext, useState } from 'react';
-import { auraApi } from '../api/auraApi';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { auraApi, type AuthUser, type CoupleInfo } from '../api/auraApi';
 
 interface AuthCtx {
   isAuth: boolean;
-  role: 'him' | 'her' | null;
-  login: (pin: string) => Promise<void>;
+  loading: boolean;
+  user: AuthUser | null;
+  couple: CoupleInfo | null;
+  hasCouple: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name?: string) => Promise<void>;
+  refresh: () => Promise<void>;
   logout: () => void;
 }
 
-const Ctx = createContext<AuthCtx>({ isAuth: false, role: null, login: async () => {}, logout: () => {} });
-
-function getSavedRole(): 'him' | 'her' | null {
-  const r = localStorage.getItem('aura_role');
-  return r === 'him' || r === 'her' ? r : null;
-}
+const Ctx = createContext<AuthCtx>({
+  isAuth: false, loading: true, user: null, couple: null, hasCouple: false,
+  login: async () => {}, register: async () => {}, refresh: async () => {}, logout: () => {},
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuth, setIsAuth] = useState(() => !!localStorage.getItem('aura_token'));
-  const [role, setRole] = useState<'him' | 'her' | null>(getSavedRole);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [couple, setCouple] = useState<CoupleInfo | null>(null);
 
-  const login = async (pin: string) => {
-    const { token, role: r } = await auraApi.login(pin);
+  const refresh = useCallback(async () => {
+    if (!localStorage.getItem('aura_token')) { setLoading(false); return; }
+    try {
+      const { user, couple } = await auraApi.me();
+      setUser(user);
+      setCouple(couple);
+      setIsAuth(true);
+    } catch {
+      // token inválido/expirado
+      localStorage.removeItem('aura_token');
+      setIsAuth(false); setUser(null); setCouple(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const applyAuth = (token: string) => {
     localStorage.setItem('aura_token', token);
-    localStorage.setItem('aura_role', r);
-    setRole(r);
-    setIsAuth(true);
+  };
+
+  const login = async (email: string, password: string) => {
+    const { token } = await auraApi.login(email, password);
+    applyAuth(token);
+    await refresh();
+  };
+
+  const register = async (email: string, password: string, name?: string) => {
+    const { token } = await auraApi.register(email, password, name);
+    applyAuth(token);
+    await refresh();
   };
 
   const logout = () => {
     localStorage.removeItem('aura_token');
-    localStorage.removeItem('aura_role');
-    setIsAuth(false);
-    setRole(null);
+    setIsAuth(false); setUser(null); setCouple(null);
   };
 
-  return <Ctx.Provider value={{ isAuth, role, login, logout }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{
+      isAuth, loading, user, couple, hasCouple: !!couple,
+      login, register, refresh, logout,
+    }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export const useAuth = () => useContext(Ctx);

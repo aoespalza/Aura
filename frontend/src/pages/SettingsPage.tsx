@@ -29,9 +29,8 @@ export function SettingsPage() {
   const { logout } = useAuth();
   const [settings, setSettings] = useState<NotifSettings>(loadSettings);
   const [permStatus, setPermStatus] = useState<NotificationPermission>('default');
-  const [pinTarget, setPinTarget] = useState<'him' | 'her'>('him');
-  const [pinForm, setPinForm] = useState({ current: '', next: '', confirm: '' });
-  const [pinMsg, setPinMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [testSent, setTestSent] = useState(false);
 
   useEffect(() => {
@@ -85,22 +84,17 @@ export function SettingsPage() {
     setTimeout(() => setTestSent(false), 3000);
   };
 
-  const handleChangePin = async (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPinMsg(null);
-    if (pinForm.next !== pinForm.confirm) { setPinMsg({ type: 'err', text: 'Los PINs no coinciden' }); return; }
-    if (pinForm.next.length < 4) { setPinMsg({ type: 'err', text: 'El PIN debe tener al menos 4 dígitos' }); return; }
+    setPwMsg(null);
+    if (pwForm.next !== pwForm.confirm) { setPwMsg({ type: 'err', text: 'Las contraseñas no coinciden' }); return; }
+    if (pwForm.next.length < 6) { setPwMsg({ type: 'err', text: 'La nueva contraseña debe tener al menos 6 caracteres' }); return; }
     try {
-      const token = localStorage.getItem('aura_token') || '';
-      await fetch('/api/auth/pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ currentPin: pinForm.current, newPin: pinForm.next, target: pinTarget }),
-      }).then(async r => { if (!r.ok) throw new Error((await r.json()).error); });
-      setPinMsg({ type: 'ok', text: 'PIN cambiado correctamente' });
-      setPinForm({ current: '', next: '', confirm: '' });
+      await auraApi.changePassword(pwForm.current, pwForm.next);
+      setPwMsg({ type: 'ok', text: 'Contraseña cambiada correctamente' });
+      setPwForm({ current: '', next: '', confirm: '' });
     } catch (err: any) {
-      setPinMsg({ type: 'err', text: err.message || 'Error al cambiar PIN' });
+      setPwMsg({ type: 'err', text: err?.response?.data?.error || 'Error al cambiar la contraseña' });
     }
   };
 
@@ -263,33 +257,26 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Cambiar PIN */}
+      {/* Cambiar contraseña */}
       <div style={{ background: 'white', borderRadius: 16, padding: '20px', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#374151' }}>🔒 Cambiar PIN</h3>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          {([['him','👨 Mi PIN'],['her','👩 PIN de ella']] as ['him'|'her',string][]).map(([v,l]) => (
-            <button key={v} type="button" onClick={() => { setPinTarget(v); setPinForm({ current:'', next:'', confirm:'' }); setPinMsg(null); }}
-              style={{ flex:1, padding:'8px', borderRadius:10, border:'none', background: pinTarget===v ? '#ec4899' : '#f3f4f6', color: pinTarget===v ? 'white' : '#6b7280', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-              {l}
-            </button>
-          ))}
-        </div>
-        <form onSubmit={handleChangePin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[['current','PIN actual'],['next','Nuevo PIN'],['confirm','Confirmar PIN']].map(([k, label]) => (
+        <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#374151' }}>🔒 Cambiar contraseña</h3>
+        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[['current','Contraseña actual'],['next','Nueva contraseña'],['confirm','Confirmar contraseña']].map(([k, label]) => (
             <div key={k}>
               <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>{label}</label>
-              <input type="password" inputMode="numeric" maxLength={8}
-                value={pinForm[k as keyof typeof pinForm]}
-                onChange={e => setPinForm(f => ({ ...f, [k]: e.target.value }))}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #fce7f3', borderRadius: 10, fontSize: 16, letterSpacing: 4, textAlign: 'center', outline: 'none', boxSizing: 'border-box' }} />
+              <input type="password"
+                value={pwForm[k as keyof typeof pwForm]}
+                onChange={e => setPwForm(f => ({ ...f, [k]: e.target.value }))}
+                autoComplete={k === 'current' ? 'current-password' : 'new-password'}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #fce7f3', borderRadius: 10, fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
             </div>
           ))}
-          {pinMsg && (
-            <p style={{ margin: 0, fontSize: 13, color: pinMsg.type === 'ok' ? '#16a34a' : '#dc2626', fontWeight: 600 }}>{pinMsg.text}</p>
+          {pwMsg && (
+            <p style={{ margin: 0, fontSize: 13, color: pwMsg.type === 'ok' ? '#16a34a' : '#dc2626', fontWeight: 600 }}>{pwMsg.text}</p>
           )}
           <button type="submit"
             style={{ background: '#ec4899', color: 'white', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-            Cambiar PIN
+            Cambiar contraseña
           </button>
         </form>
       </div>
