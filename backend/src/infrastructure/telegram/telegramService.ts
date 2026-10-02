@@ -1,13 +1,24 @@
 import { prisma } from '../database/prisma';
 
-interface TgConfig { token: string; chatId: string; chatIdHer: string; enabled: boolean; }
+export interface TgConfig { token: string; chatId: string; chatIdHer: string; enabled: boolean; }
 
-export async function getTgConfig(): Promise<TgConfig | null> {
+const KEY = 'telegram_config';
+
+// Config de Telegram de UNA pareja
+export async function getTgConfig(coupleId: string): Promise<TgConfig | null> {
   try {
-    const cfg = await prisma.systemConfig.findFirst({ where: { key: 'telegram_config' } });
+    const cfg = await prisma.coupleConfig.findUnique({ where: { coupleId_key: { coupleId, key: KEY } } });
     if (cfg?.value) return JSON.parse(cfg.value);
   } catch { /* noop */ }
   return null;
+}
+
+export async function saveTgConfig(coupleId: string, cfg: TgConfig): Promise<void> {
+  await prisma.coupleConfig.upsert({
+    where: { coupleId_key: { coupleId, key: KEY } },
+    update: { value: JSON.stringify(cfg) },
+    create: { coupleId, key: KEY, value: JSON.stringify(cfg) },
+  });
 }
 
 async function sendToChat(token: string, chatId: string, text: string): Promise<boolean> {
@@ -22,8 +33,8 @@ async function sendToChat(token: string, chatId: string, text: string): Promise<
   } catch { return false; }
 }
 
-export async function sendTelegram(text: string, onlyHer = false): Promise<{ success: boolean; error?: string }> {
-  const config = await getTgConfig();
+export async function sendTelegram(coupleId: string, text: string, onlyHer = false): Promise<{ success: boolean; error?: string }> {
+  const config = await getTgConfig(coupleId);
   if (!config?.enabled || !config.token) {
     return { success: false, error: 'Telegram no configurado' };
   }

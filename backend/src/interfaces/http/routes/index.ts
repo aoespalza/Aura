@@ -57,10 +57,10 @@ router.post('/config', authenticate, requireCouple, (req, res) => config.set(req
 // Sugerencias
 router.get('/suggestions', authenticate, requireCouple, (req, res) => suggestions.get(req, res));
 
-// Telegram
-router.get('/telegram/config', authenticate, (req, res) => telegram.getConfig(req, res));
-router.post('/telegram/config', authenticate, (req, res) => telegram.saveConfig(req, res));
-router.post('/telegram/test', authenticate, (req, res) => telegram.sendTest(req, res));
+// Telegram (config y envíos por pareja)
+router.get('/telegram/config', authenticate, requireCouple, (req, res) => telegram.getConfig(req, res));
+router.post('/telegram/config', authenticate, requireCouple, (req, res) => telegram.saveConfig(req, res));
+router.post('/telegram/test', authenticate, requireCouple, (req, res) => telegram.sendTest(req, res));
 
 // Ciclos menstruales
 router.get('/period/next', authenticate, requireCouple, (req, res) => period.nextPrediction(req, res));

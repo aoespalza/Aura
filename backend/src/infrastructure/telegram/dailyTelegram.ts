@@ -1,16 +1,17 @@
 import { prisma } from '../database/prisma';
 import { sendTelegram } from './telegramService';
 
-export async function sendDailyTelegram() {
+// Construye y envía el resumen diario de UNA pareja
+export async function sendDailyTelegramForCouple(coupleId: string) {
   try {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
 
-    // ¿Registraste ayer?
-    const yesterdayEntry = await prisma.dailyEntry.findFirst({ where: { date: yesterday } });
+    // ¿Registraron ayer?
+    const yesterdayEntry = await prisma.dailyEntry.findFirst({ where: { coupleId, date: yesterday } });
 
     // Fechas especiales próximas
-    const specialDates = await prisma.specialDate.findMany();
+    const specialDates = await prisma.specialDate.findMany({ where: { coupleId } });
     const upcoming = specialDates.filter(d => {
       const next = new Date(today.getFullYear(), d.month - 1, d.day);
       if (next < today) next.setFullYear(next.getFullYear() + 1);
@@ -24,11 +25,11 @@ export async function sendDailyTelegram() {
 
     // Período próximo
     let periodAlert = '';
-    const cycles = await prisma.periodCycle.findMany({ orderBy: { startDate: 'desc' }, take: 3 });
+    const cycles = await prisma.periodCycle.findMany({ where: { coupleId }, orderBy: { startDate: 'desc' }, take: 3 });
     if (cycles.length >= 2) {
       const intervals = [];
       for (let i = 0; i < cycles.length - 1; i++) {
-        intervals.push(Math.ceil((cycles[i].startDate.getTime() - cycles[i+1].startDate.getTime()) / 86400000));
+        intervals.push(Math.ceil((cycles[i].startDate.getTime() - cycles[i + 1].startDate.getTime()) / 86400000));
       }
       const avg = Math.round(intervals.reduce((a, b) => a + b) / intervals.length);
       const next = new Date(cycles[0].startDate.getTime() + avg * 86400000);
@@ -51,9 +52,29 @@ export async function sendDailyTelegram() {
     const dateLabel = today.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
     lines.push(`\n_${dateLabel}_`);
 
-    await sendTelegram(lines.join('\n'));
-    console.log('[Aura Telegram] Resumen diario enviado');
+    const result = await sendTelegram(coupleId, lines.join('\n'));
+    if (result.success) console.log(`[Aura Telegram] Resumen diario enviado (pareja ${coupleId})`);
   } catch (e) {
-    console.error('[Aura Telegram] Error:', e);
+    console.error(`[Aura Telegram] Error (pareja ${coupleId}):`, e);
+  }
+}
+
+// Recorre todas las parejas con Telegram activo y les envía su resumen
+export async function sendDailyTelegramAll() {
+  try {
+    const configs = await prisma.coupleConfig.findMany({ where: { key: 'telegram_config' } });
+    let sent = 0;
+    for (const cfg of configs) {
+      try {
+        const parsed = JSON.parse(cfg.value);
+        if (parsed?.enabled && parsed.token) {
+          await sendDailyTelegramForCouple(cfg.coupleId);
+          sent++;
+        }
+      } catch { /* config inválida, saltar */ }
+    }
+    console.log(`[Aura Telegram] Resúmenes diarios enviados a ${sent} pareja(s)`);
+  } catch (e) {
+    console.error('[Aura Telegram] Error global:', e);
   }
 }

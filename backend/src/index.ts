@@ -7,7 +7,7 @@ import cors from 'cors';
 import cron from 'node-cron';
 import { connectDatabase } from './infrastructure/database/prisma';
 import routes from './interfaces/http/routes';
-import { sendDailyTelegram } from './infrastructure/telegram/dailyTelegram';
+import { sendDailyTelegramAll } from './infrastructure/telegram/dailyTelegram';
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -35,8 +35,8 @@ async function start() {
 
   // Resumen diario por WhatsApp a las 8:00 AM
   cron.schedule('0 8 * * *', () => {
-    console.log('[Aura] Enviando resumen diario Telegram...');
-    sendDailyTelegram();
+    console.log('[Aura] Enviando resúmenes diarios Telegram (por pareja)...');
+    sendDailyTelegramAll();
   });
 
   app.listen(PORT, () => console.log(`🌸 Aura backend en puerto ${PORT}`));

@@ -53,8 +53,8 @@ async function main() {
     const p = await tx.periodCycle.updateMany({ where: { coupleId: null }, data: { coupleId: couple.id } });
     const s = await tx.specialDate.updateMany({ where: { coupleId: null }, data: { coupleId: couple.id } });
 
-    // Migrar config de perfil de SystemConfig -> CoupleConfig
-    const KEYS = ['profile_age', 'profile_max_age', 'intimacy_min_per_encounter'];
+    // Migrar config de perfil y Telegram de SystemConfig -> CoupleConfig
+    const KEYS = ['profile_age', 'profile_max_age', 'intimacy_min_per_encounter', 'telegram_config'];
     let cfgMoved = 0;
     for (const key of KEYS) {
       const row = await tx.systemConfig.findUnique({ where: { key } });
