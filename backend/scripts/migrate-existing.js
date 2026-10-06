@@ -11,6 +11,7 @@
  *
  * Es idempotente: si el owner ya existe, no vuelve a crear ni reasigna.
  */
+require('dotenv').config(); // carga DATABASE_URL desde backend/.env
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
