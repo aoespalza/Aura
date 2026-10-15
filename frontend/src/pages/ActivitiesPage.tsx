@@ -25,6 +25,7 @@ const emptyForm = (): Activity => ({ title: '', category: 'salida', startDate: t
 
 export function ActivitiesPage() {
   const [list, setList] = useState<Activity[]>([]);
+  const [filter, setFilter] = useState<string>('all');
   const [form, setForm] = useState<Activity>(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -54,6 +55,10 @@ export function ActivitiesPage() {
 
   const remove = async (id: string) => { await auraApi.deleteActivity(id); load(); };
 
+  // Categorías presentes en la lista (para no mostrar filtros vacíos)
+  const presentCats = CATEGORIES.filter(c => list.some(a => a.category === c.v));
+  const shown = filter === 'all' ? list : list.filter(a => a.category === filter);
+
   const input: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid #fce7f3', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: '#be185d' };
   const lbl: React.CSSProperties = { fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4, fontWeight: 600 };
   const chip = (active: boolean): React.CSSProperties => ({ padding: '7px 10px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: active ? '#ec4899' : '#f3f4f6', color: active ? 'white' : '#6b7280' });
@@ -71,9 +76,20 @@ export function ActivitiesPage() {
         </p>
       )}
 
+      {/* Filtro por categoría */}
+      {presentCats.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 4 }}>
+          <button onClick={() => setFilter('all')} style={chip(filter === 'all')}>Todas ({list.length})</button>
+          {presentCats.map(c => {
+            const n = list.filter(a => a.category === c.v).length;
+            return <button key={c.v} onClick={() => setFilter(c.v)} style={{ ...chip(filter === c.v), whiteSpace: 'nowrap' }}>{c.icon} {c.label} ({n})</button>;
+          })}
+        </div>
+      )}
+
       {/* Lista */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {list.map(a => {
+        {shown.map(a => {
           const ci = catInfo(a.category);
           return (
             <div key={a.id} style={{ background: 'white', borderRadius: 14, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
