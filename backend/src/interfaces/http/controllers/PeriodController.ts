@@ -2,6 +2,30 @@ import { Response } from 'express';
 import { prisma } from '../../../infrastructure/database/prisma';
 import { AuthRequest } from '../middleware/auth';
 
+// Marca como día de período cada día del rango [start, end] en DailyEntry
+async function fillPeriodDays(coupleId: string, start: Date, end: Date) {
+  const day = new Date(start);
+  let n = 1;
+  while (day.getTime() <= end.getTime()) {
+    const date = new Date(day);
+    await prisma.dailyEntry.upsert({
+      where: { coupleId_date: { coupleId, date } },
+      update: { isPeriodDay: true, periodDayNumber: n },
+      create: { coupleId, date, mood: 3, isPeriodDay: true, periodDayNumber: n },
+    });
+    day.setDate(day.getDate() + 1);
+    n++;
+  }
+}
+
+// Quita la marca de período a los días del rango (sin borrar la entrada)
+async function clearPeriodDays(coupleId: string, start: Date, end: Date) {
+  await prisma.dailyEntry.updateMany({
+    where: { coupleId, date: { gte: start, lte: end }, isPeriodDay: true },
+    data: { isPeriodDay: false, periodDayNumber: null },
+  });
+}
+
 export class PeriodController {
   async list(req: AuthRequest, res: Response) {
     try {
@@ -23,6 +47,8 @@ export class PeriodController {
       const cycle = await prisma.periodCycle.create({
         data: { coupleId, startDate: start, endDate: end, duration, notes },
       });
+      // Rellenar los días del período en el calendario
+      await fillPeriodDays(coupleId, start, end || start);
       res.json(cycle);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -41,6 +67,16 @@ export class PeriodController {
         where: { id: existing.id },
         data: { endDate: end, duration, notes },
       });
+      // Reajustar los días de período en el calendario
+      if (end) {
+        await fillPeriodDays(coupleId, existing.startDate, end);
+        if (existing.endDate && existing.endDate.getTime() > end.getTime()) {
+          const from = new Date(end); from.setDate(from.getDate() + 1);
+          await clearPeriodDays(coupleId, from, existing.endDate);
+        }
+      } else {
+        await fillPeriodDays(coupleId, existing.startDate, existing.startDate);
+      }
       res.json(cycle);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -50,7 +86,11 @@ export class PeriodController {
   async remove(req: AuthRequest, res: Response) {
     try {
       const coupleId = req.coupleId!;
-      await prisma.periodCycle.deleteMany({ where: { id: req.params.id, coupleId } });
+      const existing = await prisma.periodCycle.findFirst({ where: { id: req.params.id, coupleId } });
+      if (existing) {
+        await clearPeriodDays(coupleId, existing.startDate, existing.endDate || existing.startDate);
+        await prisma.periodCycle.delete({ where: { id: existing.id } });
+      }
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
