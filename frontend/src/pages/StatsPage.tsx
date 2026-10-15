@@ -82,6 +82,32 @@ export function StatsPage() {
         </div>
       </div>
 
+      {/* Tiempo juntos (actividades) */}
+      {stats.activitiesCount > 0 && (
+        <div style={{ background: 'white', borderRadius: 14, padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginBottom: 16 }}>
+          <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: 14, color: '#374151' }}>🗓️ Tiempo juntos</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#ec4899' }}>{stats.daysTogether}</div>
+              <div style={{ fontSize: 11, color: '#9ca3af' }}>días juntos</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#a855f7' }}>{stats.activitiesCount}</div>
+              <div style={{ fontSize: 11, color: '#9ca3af' }}>actividades</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>{stats.avgActivityRating > 0 ? `${stats.avgActivityRating}★` : '—'}</div>
+              <div style={{ fontSize: 11, color: '#9ca3af' }}>calificación</div>
+            </div>
+          </div>
+          {stats.topCategory && (
+            <p style={{ margin: '12px 0 0', fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
+              Lo que más hacen: <b style={{ color: '#be185d' }}>{stats.topCategory}</b>
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Panel de tiempo de intimidad */}
       <IntimacyTimePanel intimacyDays={stats.intimacyDays} months={months} />
 

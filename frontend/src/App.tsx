@@ -6,12 +6,13 @@ import { CalendarPage } from './pages/CalendarPage';
 import { StatsPage } from './pages/StatsPage';
 import { DisgutsPage } from './pages/DisgutsPage';
 import { CyclePage } from './pages/CyclePage';
+import { ActivitiesPage } from './pages/ActivitiesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SpecialDatesPage } from './pages/SpecialDatesPage';
 import { MatripuntosPage } from './pages/MatripuntosPage';
 import './App.css';
 
-type Tab = 'calendar' | 'disgusts' | 'cycle' | 'points' | 'stats' | 'more' | 'settings';
+type Tab = 'calendar' | 'disgusts' | 'cycle' | 'activities' | 'points' | 'stats' | 'more' | 'settings';
 
 function AppContent() {
   const { isAuth, loading, hasCouple, logout } = useAuth();
@@ -34,6 +35,7 @@ function AppContent() {
         {tab === 'calendar' && <CalendarPage />}
         {tab === 'disgusts' && <DisgutsPage />}
         {tab === 'cycle' && <CyclePage />}
+        {tab === 'activities' && <ActivitiesPage />}
         {tab === 'points' && <MatripuntosPage />}
         {tab === 'stats' && <StatsPage />}
         {tab === 'more' && <SpecialDatesPage />}
@@ -42,7 +44,7 @@ function AppContent() {
 
       {/* Bottom nav — 6 tabs compactos */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #fce7f3', display: 'flex', width: '100%' }}>
-        {([['calendar','📅','Hoy'],['disgusts','😤','Disgustos'],['cycle','💜','Ciclo'],['points','💎','Puntos'],['stats','📊','Resumen'],['more','✨','Fechas'],['settings','⚙️','Ajustes']] as [Tab,string,string][]).map(([t, icon, label]) => (
+        {([['calendar','📅','Hoy'],['disgusts','😤','Disgustos'],['cycle','💜','Ciclo'],['activities','🗓️','Juntos'],['points','💎','Puntos'],['stats','📊','Resumen'],['more','✨','Fechas'],['settings','⚙️','Ajustes']] as [Tab,string,string][]).map(([t, icon, label]) => (
           <button key={t} onClick={() => setTab(t)}
             style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', padding: '8px 0 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, color: tab === t ? '#ec4899' : '#9ca3af' }}>
             <span style={{ fontSize: 18 }}>{icon}</span>

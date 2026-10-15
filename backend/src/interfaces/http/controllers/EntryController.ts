@@ -76,6 +76,18 @@ export class EntryController {
         orderBy: { date: 'asc' },
       });
 
+      // Actividades (tiempo juntos) en el rango
+      const activities = await prisma.activity.findMany({
+        where: { coupleId, startDate: { gte: since } },
+      });
+      const activitiesCount = activities.length;
+      const daysTogether = activities.reduce((s, a) => s + (a.days || 1), 0);
+      const catCount: Record<string, number> = {};
+      activities.forEach(a => { if (a.category) catCount[a.category] = (catCount[a.category] || 0) + 1; });
+      const topCategory = Object.entries(catCount).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
+      const ratings = activities.filter(a => typeof a.rating === 'number').map(a => a.rating as number);
+      const avgActivityRating = ratings.length ? Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10 : 0;
+
       const round1 = (n: number) => Math.round(n * 10) / 10;
       const avgOf = (arr: (number | null | undefined)[]) => {
         const vals = arr.filter((v): v is number => typeof v === 'number');
@@ -129,6 +141,10 @@ export class EntryController {
         intimacyPerMonth,
         disgustPerMonth,
         detailPerMonth,
+        activitiesCount,
+        daysTogether,
+        topCategory,
+        avgActivityRating,
         periodDisgustRate,
         moodByWeekday: Object.fromEntries(
           Object.entries(moodByWeekday).map(([k, v]) => [k, Math.round((v.total / v.count) * 10) / 10])

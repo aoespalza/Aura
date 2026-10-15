@@ -43,6 +43,20 @@ export interface PeriodCycle {
   notes?: string;
 }
 
+export interface Activity {
+  id?: string;
+  title: string;
+  category?: string;
+  startDate: string;
+  endDate?: string | null;
+  days?: number;
+  proposedBy?: string;
+  paidBy?: string;
+  cost?: number | null;
+  rating?: number | null;
+  notes?: string;
+}
+
 export interface Stats {
   total: number;
   avgMood: number;
@@ -56,6 +70,10 @@ export interface Stats {
   intimacyPerMonth: number;
   disgustPerMonth: number;
   detailPerMonth: number;
+  activitiesCount: number;
+  daysTogether: number;
+  topCategory: string | null;
+  avgActivityRating: number;
   periodDisgustRate: number;
   moodByWeekday: Record<string, number>;
 }
@@ -219,6 +237,21 @@ export const auraApi = {
     const { data } = await api.get(`/points?months=${months}`);
     return data;
   },
+
+  // Actividades
+  getActivities: async (): Promise<Activity[]> => {
+    const { data } = await api.get('/activities');
+    return data;
+  },
+  createActivity: async (a: Activity): Promise<Activity> => {
+    const { data } = await api.post('/activities', a);
+    return data;
+  },
+  updateActivity: async (id: string, a: Partial<Activity>): Promise<Activity> => {
+    const { data } = await api.put(`/activities/${id}`, a);
+    return data;
+  },
+  deleteActivity: async (id: string) => { await api.delete(`/activities/${id}`); },
 
   // Sugerencias
   getSuggestions: async (): Promise<Suggestion[]> => {

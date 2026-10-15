@@ -21,6 +21,7 @@ model Couple {
   cycles       PeriodCycle[]
   specialDates SpecialDate[]
   config       CoupleConfig[]
+  activities   Activity[]
 }
 
 model User {
@@ -127,6 +128,29 @@ model SpecialDate {
   notes        String?
   reminderDays Int      @default(3)
   createdAt    DateTime @default(now())
+}
+
+model Activity {
+  id         String    @id @default(uuid())
+
+  coupleId   String?
+  couple     Couple?   @relation(fields: [coupleId], references: [id])
+
+  title      String
+  category   String?   // familia | amigos | viaje | cita | salida | casa | otro
+  startDate  DateTime
+  endDate    DateTime?
+  days       Int       @default(1) // días que duró (inicio..fin inclusive)
+
+  proposedBy String?   // me | her | both | other
+  paidBy     String?   // me | her | shared | other
+  cost       Float?
+
+  rating     Int?      // 1-5
+  notes      String?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model PeriodCycle {

@@ -8,6 +8,7 @@ import { SuggestionsController } from '../controllers/SuggestionsController';
 import { TelegramController } from '../controllers/TelegramController';
 import { ConfigController } from '../controllers/ConfigController';
 import { CoupleController } from '../controllers/CoupleController';
+import { ActivityController } from '../controllers/ActivityController';
 import { authenticate, requireCouple } from '../middleware/auth';
 
 const router = Router();
@@ -20,6 +21,7 @@ const suggestions = new SuggestionsController();
 const telegram = new TelegramController();
 const config = new ConfigController();
 const couple = new CoupleController();
+const activity = new ActivityController();
 
 // Auth (email + contraseña)
 router.post('/auth/register', (req, res) => auth.register(req, res));
@@ -53,6 +55,12 @@ router.get('/points', authenticate, requireCouple, (req, res) => points.get(req,
 // Configuración (perfil: edad, edad máx, min/encuentro)
 router.get('/config', authenticate, requireCouple, (req, res) => config.get(req, res));
 router.post('/config', authenticate, requireCouple, (req, res) => config.set(req, res));
+
+// Actividades (tiempo juntos)
+router.get('/activities', authenticate, requireCouple, (req, res) => activity.list(req, res));
+router.post('/activities', authenticate, requireCouple, (req, res) => activity.create(req, res));
+router.put('/activities/:id', authenticate, requireCouple, (req, res) => activity.update(req, res));
+router.delete('/activities/:id', authenticate, requireCouple, (req, res) => activity.remove(req, res));
 
 // Sugerencias
 router.get('/suggestions', authenticate, requireCouple, (req, res) => suggestions.get(req, res));
