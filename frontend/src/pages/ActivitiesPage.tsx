@@ -16,12 +16,15 @@ const WHO: { v: string; label: string }[] = [
 const PAID: { v: string; label: string }[] = [
   { v: 'me', label: 'Yo' }, { v: 'her', label: 'Ella' }, { v: 'shared', label: 'Compartido' }, { v: 'other', label: 'Otro' },
 ];
+const FAMILY: { v: string; label: string }[] = [
+  { v: 'ours', label: 'La nuestra' }, { v: 'mine', label: 'La mía' }, { v: 'hers', label: 'La de ella' },
+];
 
 const catInfo = (v?: string) => CATEGORIES.find(c => c.v === v);
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (s: string) => new Date(s.slice(0, 10) + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
 
-const emptyForm = (): Activity => ({ title: '', category: 'salida', startDate: todayStr(), endDate: '', proposedBy: 'me', paidBy: 'shared', cost: null, rating: null, notes: '' });
+const emptyForm = (): Activity => ({ title: '', category: 'salida', startDate: todayStr(), endDate: '', proposedBy: 'me', paidBy: 'shared', cost: null, rating: null, familySide: 'ours', notes: '' });
 
 export function ActivitiesPage() {
   const [list, setList] = useState<Activity[]>([]);
@@ -107,6 +110,7 @@ export function ActivitiesPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {a.category === 'familia' && a.familySide && <span style={{ fontSize: 11, color: '#be185d', background: '#fdf2f8', borderRadius: 6, padding: '2px 8px' }}>Familia: {FAMILY.find(f => f.v === a.familySide)?.label}</span>}
                 {a.proposedBy && <span style={{ fontSize: 11, color: '#6b7280', background: '#faf5ff', borderRadius: 6, padding: '2px 8px' }}>Propuso: {WHO.find(w => w.v === a.proposedBy)?.label}</span>}
                 {a.paidBy && <span style={{ fontSize: 11, color: '#6b7280', background: '#f0fdf4', borderRadius: 6, padding: '2px 8px' }}>Pagó: {PAID.find(w => w.v === a.paidBy)?.label}{a.cost ? ` ($${a.cost.toLocaleString('es-CO')})` : ''}</span>}
                 {a.rating ? <span style={{ fontSize: 11, color: '#f59e0b', background: '#fffbeb', borderRadius: 6, padding: '2px 8px' }}>{'★'.repeat(a.rating)}</span> : null}
@@ -137,6 +141,15 @@ export function ActivitiesPage() {
                   ))}
                 </div>
               </div>
+
+              {form.category === 'familia' && (
+                <div>
+                  <label style={lbl}>¿Con qué familia?</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {FAMILY.map(f => <button key={f.v} onClick={() => set('familySide', f.v)} style={chip(form.familySide === f.v)}>{f.label}</button>)}
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <div style={{ flex: 1 }}>

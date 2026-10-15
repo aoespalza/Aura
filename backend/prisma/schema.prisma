@@ -145,6 +145,7 @@ model Activity {
   proposedBy String?   // me | her | both | other
   paidBy     String?   // me | her | shared | other
   cost       Float?
+  familySide String?   // ours | mine | hers  (con qué familia, para categoría 'familia')
 
   rating     Int?      // 1-5
   notes      String?

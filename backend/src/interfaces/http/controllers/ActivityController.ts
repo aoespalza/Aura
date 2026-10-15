@@ -23,7 +23,7 @@ export class ActivityController {
   async create(req: AuthRequest, res: Response) {
     try {
       const coupleId = req.coupleId!;
-      const { title, category, startDate, endDate, proposedBy, paidBy, cost, rating, notes } = req.body;
+      const { title, category, startDate, endDate, proposedBy, paidBy, cost, rating, notes, familySide } = req.body;
       const start = parseDay(startDate);
       if (!title || !start) { res.status(400).json({ error: 'Título y fecha de inicio son obligatorios' }); return; }
       const end = parseDay(endDate);
@@ -34,6 +34,7 @@ export class ActivityController {
           proposedBy: proposedBy || null, paidBy: paidBy || null,
           cost: cost != null && cost !== '' ? Number(cost) : null,
           rating: rating != null && rating !== '' ? Number(rating) : null,
+          familySide: category === 'familia' ? (familySide || null) : null,
           notes: notes || null,
         },
       });
@@ -46,17 +47,20 @@ export class ActivityController {
       const coupleId = req.coupleId!;
       const existing = await prisma.activity.findFirst({ where: { id: req.params.id, coupleId } });
       if (!existing) { res.status(404).json({ error: 'Actividad no encontrada' }); return; }
-      const { title, category, startDate, endDate, proposedBy, paidBy, cost, rating, notes } = req.body;
+      const { title, category, startDate, endDate, proposedBy, paidBy, cost, rating, notes, familySide } = req.body;
       const start = parseDay(startDate) || existing.startDate;
       const end = startDate || endDate !== undefined ? parseDay(endDate) : existing.endDate;
+      const newCategory = category ?? existing.category;
+      const newFamilySide = familySide !== undefined ? familySide : existing.familySide;
       const activity = await prisma.activity.update({
         where: { id: existing.id },
         data: {
-          title: title ?? existing.title, category: category ?? existing.category,
+          title: title ?? existing.title, category: newCategory,
           startDate: start, endDate: end, days: daysBetween(start, end),
           proposedBy: proposedBy ?? existing.proposedBy, paidBy: paidBy ?? existing.paidBy,
           cost: cost != null && cost !== '' ? Number(cost) : (cost === '' ? null : existing.cost),
           rating: rating != null && rating !== '' ? Number(rating) : (rating === '' ? null : existing.rating),
+          familySide: newCategory === 'familia' ? (newFamilySide || null) : null,
           notes: notes ?? existing.notes,
         },
       });

@@ -54,6 +54,7 @@ export interface Activity {
   paidBy?: string;
   cost?: number | null;
   rating?: number | null;
+  familySide?: string;
   notes?: string;
 }
 
